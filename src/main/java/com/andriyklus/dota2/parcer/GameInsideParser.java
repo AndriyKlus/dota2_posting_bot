@@ -1,6 +1,7 @@
 package com.andriyklus.dota2.parcer;
 
 import com.andriyklus.dota2.domain.NewsPost;
+import org.apache.logging.log4j.util.Strings;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -31,6 +32,7 @@ public class GameInsideParser {
         return news.
                 stream()
                 .map(GameInsideParser::parseNews)
+                .filter(newsPost -> Strings.isNotEmpty(newsPost.getImageUrl()))
                 .collect(Collectors.toList());
     }
 
