@@ -4,20 +4,27 @@ import com.andriyklus.dota2.domain.Match;
 import com.andriyklus.dota2.domain.Team;
 import com.andriyklus.dota2.domain.Tournament;
 import com.andriyklus.dota2.service.db.TeamService;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.net.URL;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
 public class LiquipediaParser {
+
+    private static final String MATCHES_PAGE_URL = "https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches";
+
 
     private final TeamService teamService;
 
@@ -26,39 +33,42 @@ public class LiquipediaParser {
     }
 
     public List<Match> parseDayMatches() {
-        System.setProperty("webdriver.chrome.driver", "selenium\\chromedriver.exe");
-        WebDriver webDriver = new ChromeDriver();
-        webDriver.get("https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches");
-        return parseMatches(webDriver);
+        Document matchesPage;
+        try {
+            matchesPage = Jsoup.parse(new URL(MATCHES_PAGE_URL), 30000);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return parseMatches(matchesPage);
     }
 
-    private List<Match> parseMatches(WebDriver webDriver) {
+    private List<Match> parseMatches(Document matchesPage) {
         List<Match> matches = new ArrayList<>();
-        List<WebElement> matchesBoxes = webDriver.findElements(By.className("infobox_matches_content"));
+        Elements matchesBoxes = matchesPage.getElementsByClass("infobox_matches_content");
+        List<Element> elements = matchesBoxes.subList(0, matchesBoxes.size()/4);
 
-        for(WebElement matchBox : matchesBoxes) {
-            parseUpcomingMatch(matchBox).ifPresent(matches::add);
+        for(Element element : elements) {
+            parseUpcomingMatch(element).ifPresent(matches::add);
         }
-
-        webDriver.close();
         return matches;
     }
 
-    private Optional<Match> parseUpcomingMatch(WebElement matchBox) {
+    private Optional<Match> parseUpcomingMatch(Element matchBox) {
 
         if(filterStartedMatch(matchBox))
             return Optional.empty();
 
-        String teamOneName = matchBox.findElement(By.className("team-left")).getText();
-        String teamTwoName = matchBox.findElement(By.className("team-right")).getText();
+        String teamOneName = matchBox.getElementsByClass("team-left").get(0).text();
+        String teamTwoName = matchBox.getElementsByClass("team-right").get(0).text();
 
         if(filterUncertainMatches(teamOneName, teamTwoName) || !filterUkrainianTeams(teamOneName, teamTwoName))
             return Optional.empty();
 
-        String tournament = matchBox.findElement(By.className("tournament-text")).getText();
+        String tournament = matchBox.getElementsByClass("tournament-text").get(0).text();
         String time;
         try {
-            time = formatTime(matchBox.findElement(By.className("timer-object-countdown-only")).getText()).orElseThrow();
+            String p = matchBox.getElementsByClass("timer-object-countdown-only").get(0).text();
+            time = formatTime(matchBox.getElementsByClass("timer-object-countdown-only").get(0).text()).orElseThrow();
         } catch (Exception e) {
             return Optional.empty();
         }
@@ -75,8 +85,8 @@ public class LiquipediaParser {
                 .build());
     }
 
-    private boolean filterStartedMatch(WebElement matchBox) {
-        return !matchBox.findElement(By.className("versus")).getText().contains("vs");
+    private boolean filterStartedMatch(Element matchBox) {
+        return !matchBox.getElementsByClass("versus").get(0).text().contains("vs");
     }
 
     private boolean filterUncertainMatches(String teamOneName, String teamTwoName) {
@@ -88,31 +98,21 @@ public class LiquipediaParser {
         return ukrainianTeams.contains(teamOneName) || ukrainianTeams.contains(teamTwoName);
     }
 
-    private Optional<String> formatTime(String timeString) {
-        String[] parts = timeString.split("\\s+");
-        int hours = 0;
-        int minutes = 0;
-        int seconds = 0;
+    private Optional<String> formatTime(String dateTimeString) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy - HH:mm z", Locale.ENGLISH);
 
-        for (String part : parts) {
-            if (part.endsWith("h")) {
-                hours = Integer.parseInt(part.substring(0, part.length() - 1));
-            } else if (part.endsWith("m")) {
-                minutes = Integer.parseInt(part.substring(0, part.length() - 1));
-            } else if (part.endsWith("s")) {
-                seconds = Integer.parseInt(part.substring(0, part.length() - 1));
-            }
-        }
+        LocalDateTime parseDateTime = LocalDateTime.parse(dateTimeString, formatter);
 
-        if(hours > 15)
+        LocalDateTime currentDateTime = LocalDateTime.now();
+
+        if(currentDateTime.getDayOfMonth() != parseDateTime.getDayOfMonth())
             return Optional.empty();
 
-        LocalTime currentTime = LocalTime.now();
+        LocalTime resultTime = parseDateTime.toLocalTime().plusHours(2);
 
-        LocalTime resultTime = currentTime.plusHours(hours).plusMinutes(minutes).plusSeconds(seconds);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-        return Optional.of(resultTime.format(formatter));
+        DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("HH:mm");
+        return Optional.of(resultTime.format(formatter2));
     }
 
 }

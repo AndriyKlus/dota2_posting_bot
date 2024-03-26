@@ -49,7 +49,8 @@ public class PosterService {
         return newPosts;
     }
 
-    @Scheduled(cron = "0 0 9 * * *")
+    //@Scheduled(cron = "0 0 11 * * *")
+    @Scheduled(fixedRate = 15 * 60 * 1000)
     public void postTodayMatches() {
         List<Match> matches = liquipediaParser.parseDayMatches();
         if(matches.size() == 0)
