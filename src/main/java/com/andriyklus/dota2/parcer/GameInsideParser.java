@@ -1,6 +1,6 @@
 package com.andriyklus.dota2.parcer;
 
-import com.andriyklus.dota2.domain.NewsPost;
+import com.andriyklus.dota2.domain.GameinsideNewsPost;
 import org.apache.logging.log4j.util.Strings;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 
 public class GameInsideParser {
 
-    private static String PAGE_URL = "https://gameinside.ua/news/";
+    private static final String PAGE_URL = "https://gameinside.ua/news/";
 
-    public static List<NewsPost> parseDota2AndCS2News() {
+    public static List<GameinsideNewsPost> parseDota2AndCS2News() {
         Document matchesPage;
         try {
             matchesPage = Jsoup.parse(new URL(PAGE_URL), 30000);
@@ -28,15 +28,15 @@ public class GameInsideParser {
         return parseNews(news);
     }
 
-    private static List<NewsPost> parseNews(Elements news) {
+    private static List<GameinsideNewsPost> parseNews(Elements news) {
         return news.
                 stream()
                 .map(GameInsideParser::parseNews)
-                .filter(newsPost -> Strings.isNotEmpty(newsPost.getImageUrl()))
+                .filter(gameinsideNewsPost -> Strings.isNotEmpty(gameinsideNewsPost.getImageUrl()))
                 .collect(Collectors.toList());
     }
 
-    private static NewsPost parseNews(Element news) {
+    private static GameinsideNewsPost parseNews(Element news) {
         String header = news.getElementsByClass("newsList__textWrap").get(0)
                 .getElementsByTag("h2").get(0).text();
         String tags = news.getElementsByClass("cat-links").get(0)
@@ -47,7 +47,7 @@ public class GameInsideParser {
         String imageUrl = parseImageStyle(imageUrlStyle);
         String newsUrl = news.getElementsByClass("newsList__textWrap").get(0)
                 .getElementsByTag("h2").get(0).getElementsByTag("a").get(0).attr("href");
-        return NewsPost.builder()
+        return GameinsideNewsPost.builder()
                 .header(header)
                 .tags(tags)
                 .body(body)

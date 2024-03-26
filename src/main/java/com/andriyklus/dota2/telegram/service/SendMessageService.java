@@ -2,7 +2,7 @@ package com.andriyklus.dota2.telegram.service;
 
 
 import com.andriyklus.dota2.domain.Match;
-import com.andriyklus.dota2.domain.NewsPost;
+import com.andriyklus.dota2.domain.GameinsideNewsPost;
 import com.andriyklus.dota2.telegram.messagesender.MessageSender;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
@@ -26,11 +26,12 @@ public class SendMessageService {
         this.messageSender = messageSender;
     }
 
-    public void postGameInsideNews(NewsPost newsPost) {
+    public void postGameInsideNews(GameinsideNewsPost gameinsideNewsPost) {
         var message = SendPhoto.builder()
                 .chatId(-1002029412738L)
-                .caption(formatMessageForGameinsideNews(newsPost))
-                .photo(new InputFile(newsPost.getImageUrl()))
+                //.chatId(358029493L)
+                .caption(formatMessageForGameinsideNews(gameinsideNewsPost))
+                .photo(new InputFile(gameinsideNewsPost.getImageUrl()))
                 .parseMode(ParseMode.HTML)
                 .build();
 
@@ -38,26 +39,27 @@ public class SendMessageService {
 
     }
 
-    private String formatMessageForGameinsideNews(NewsPost newsPost) {
+    private String formatMessageForGameinsideNews(GameinsideNewsPost gameinsideNewsPost) {
         return "<b>" +
-                newsPost.getHeader() +
+                gameinsideNewsPost.getHeader() +
                 "</b>" +
                 "\n\n" +
-                newsPost.getBody() +
+                gameinsideNewsPost.getBody() +
                 "\n" +
                 "<a href=\"" +
-                newsPost.getNewsUrl() +
+                gameinsideNewsPost.getNewsUrl() +
                 "\">" +
                 "Прочитати повну статтю" +
                 "</a>" +
                 "\n\n" +
                 "#" +
-                newsPost.getTags();
+                gameinsideNewsPost.getTags();
     }
 
     public void postTodayGames(List<Match> matches) {
         var message = SendMessage.builder()
                 .chatId(-1002029412738L)
+                //.chatId(358029493L)
                 .text(formatMessageForTodayGames(matches))
                 .parseMode(ParseMode.HTML)
                 .build();
