@@ -15,11 +15,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Match {
 
     @Id
-    private Long id;
+    private String id;
     private Team teamOne;
     private Team teamTwo;
     private Tournament tournament;
     private String time;
-
+    private int format;
 
 }

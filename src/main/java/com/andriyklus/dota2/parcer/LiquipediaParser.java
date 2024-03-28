@@ -19,11 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class LiquipediaParser {
 
     private static final String MATCHES_PAGE_URL = "https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches";
+    private static final String MATCHES_STATS_URL = "https://liquipedia.net/dota2/Special:Stream/twitch/";
 
 
     private final TeamService teamService;
@@ -45,9 +47,9 @@ public class LiquipediaParser {
     private List<Match> parseMatches(Document matchesPage) {
         List<Match> matches = new ArrayList<>();
         Elements matchesBoxes = matchesPage.getElementsByClass("infobox_matches_content");
-        List<Element> elements = matchesBoxes.subList(0, matchesBoxes.size()/4);
+        List<Element> elements = matchesBoxes.subList(0, matchesBoxes.size() / 4);
 
-        for(Element element : elements) {
+        for (Element element : elements) {
             parseUpcomingMatch(element).ifPresent(matches::add);
         }
         return matches;
@@ -55,19 +57,19 @@ public class LiquipediaParser {
 
     private Optional<Match> parseUpcomingMatch(Element matchBox) {
 
-        if(filterStartedMatch(matchBox))
+        if (filterStartedMatch(matchBox))
             return Optional.empty();
 
         String teamOneName = matchBox.getElementsByClass("team-left").get(0).text();
         String teamTwoName = matchBox.getElementsByClass("team-right").get(0).text();
+        int matchFormat = Integer.parseInt(matchBox.getElementsByClass("versus-lower").get(0).text().substring(0, 3));
 
-        if(filterUncertainMatches(teamOneName, teamTwoName) || !filterUkrainianTeams(teamOneName, teamTwoName))
+        if (filterUncertainMatches(teamOneName, teamTwoName) || filterUkrainianTeams(teamOneName, teamTwoName))
             return Optional.empty();
 
         String tournament = matchBox.getElementsByClass("tournament-text").get(0).text();
         String time;
         try {
-            String p = matchBox.getElementsByClass("timer-object-countdown-only").get(0).text();
             time = formatTime(matchBox.getElementsByClass("timer-object-countdown-only").get(0).text()).orElseThrow();
         } catch (Exception e) {
             return Optional.empty();
@@ -82,6 +84,7 @@ public class LiquipediaParser {
                         .build())
                 .tournament(Tournament.builder().name(tournament).build())
                 .time(time)
+                .format(matchFormat)
                 .build());
     }
 
@@ -95,7 +98,7 @@ public class LiquipediaParser {
 
     private boolean filterUkrainianTeams(String teamOneName, String teamTwoName) {
         List<String> ukrainianTeams = teamService.getUkrainianTeams().stream().map(Team::getName).toList();
-        return ukrainianTeams.contains(teamOneName) || ukrainianTeams.contains(teamTwoName);
+        return !ukrainianTeams.contains(teamOneName) && !ukrainianTeams.contains(teamTwoName);
     }
 
     private Optional<String> formatTime(String dateTimeString) {
@@ -105,7 +108,7 @@ public class LiquipediaParser {
 
         LocalDateTime currentDateTime = LocalDateTime.now();
 
-        if(currentDateTime.getDayOfMonth() != parseDateTime.getDayOfMonth())
+        if (currentDateTime.getDayOfMonth() != parseDateTime.getDayOfMonth())
             return Optional.empty();
 
         LocalTime resultTime = parseDateTime.toLocalTime().plusHours(2);
@@ -114,5 +117,81 @@ public class LiquipediaParser {
         DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("HH:mm");
         return Optional.of(resultTime.format(formatter2));
     }
+
+    public List<Match> parseStartedMatches() {
+        Document matchesPage;
+        try {
+            matchesPage = Jsoup.parse(new URL(MATCHES_PAGE_URL), 30000);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return parseStartedMatches(matchesPage);
+    }
+
+    private List<Match> parseStartedMatches(Document matchesPage) {
+        List<Match> startedMatches = new ArrayList<>();
+        Elements matchesBoxes = matchesPage.getElementsByClass("infobox_matches_content");
+        List<Element> elements = matchesBoxes.subList(0, matchesBoxes.size() / 4);
+
+        for (Element element : elements) {
+            if (!filterStartedMatch(element))
+                return startedMatches;
+
+            parseStartedMatch(element).ifPresent(startedMatches::add);
+        }
+        return startedMatches;
+    }
+
+    private Optional<Match> parseStartedMatch(Element matchBox) {
+
+        String teamOneName = matchBox.getElementsByClass("team-left").get(0).text();
+        String teamTwoName = matchBox.getElementsByClass("team-right").get(0).text();
+        int matchFormat = Integer.parseInt(matchBox.getElementsByClass("versus-lower").get(0).text().substring(0, 3));
+        String twitchChannel = matchBox.getElementsByClass("timer-object-countdown-only").get(0)
+                .attr("data-stream-twitch");
+        int firstTeamScore = Integer.parseInt(matchBox.getElementsByClass("versus").get(0)
+                .getElementsByTag("div").get(0)
+                .getElementsByTag("div").get(0).text().substring(0, 1));
+        int secondTeamScore = Integer.parseInt(matchBox.getElementsByClass("versus").get(0)
+                .getElementsByTag("div").get(0)
+                .getElementsByTag("div").get(0).text().substring(2, 3));
+
+        if (filterUncertainMatches(teamOneName, teamTwoName) || filterUkrainianTeams(teamOneName, teamTwoName))
+            return Optional.empty();
+
+        String tournament = matchBox.getElementsByClass("tournament-text").get(0).text();
+
+        Match match = Match.builder()
+                .teamOne(Team.builder()
+                        .name(teamOneName)
+                        .score(firstTeamScore)
+                        .build())
+                .teamTwo(Team.builder()
+                        .name(teamTwoName)
+                        .score(secondTeamScore)
+                        .build())
+                .tournament(Tournament.builder().name(tournament).build())
+                .format(matchFormat)
+                .build();
+        parseMatchStats(twitchChannel, match);
+        return Optional.of(match);
+    }
+
+    private void parseMatchStats(String twitchChannel, Match match) {
+        Document statsPage;
+        try {
+            statsPage = Jsoup.parse(new URL(MATCHES_STATS_URL + twitchChannel), 30000);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        parsePlayers(statsPage, match);
+    }
+
+    private void parsePlayers(Document document, Match match) {
+        Elements tables = document.getElementsByClass("wikitable");
+        match.getTeamOne().setPlayers(tables.get(0).getElementsByAttributeValue("id", "player").stream().map(Element::text).collect(Collectors.toList()));
+        match.getTeamTwo().setPlayers(tables.get(1).getElementsByAttributeValue("id", "player").stream().map(Element::text).collect(Collectors.toList()));
+    }
+
 
 }

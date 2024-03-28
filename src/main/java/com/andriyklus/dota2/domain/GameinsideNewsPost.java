@@ -13,7 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document
+@Document(collection = "gameinside_last_post")
 public class GameinsideNewsPost {
 
     @Id
