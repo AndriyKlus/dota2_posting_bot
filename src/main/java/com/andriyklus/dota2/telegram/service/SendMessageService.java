@@ -131,4 +131,12 @@ public class SendMessageService {
     }
 
 
+    public void postTwoUkrainianTeamsGame() {
+    }
+
+    public void postUkrainianTeamWonGame(Match match) {
+    }
+
+    public void postUkrainianTeamLostGame(Match match) {
+    }
 }

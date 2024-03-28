@@ -3,11 +3,15 @@ package com.andriyklus.dota2.parcer;
 import com.andriyklus.dota2.domain.Match;
 import com.andriyklus.dota2.domain.Team;
 import com.andriyklus.dota2.domain.Tournament;
-import com.andriyklus.dota2.service.db.TeamService;
+import com.andriyklus.dota2.domain.UkrainianTeam;
+import com.andriyklus.dota2.service.db.UkrainianTeamService;
+import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -22,17 +26,16 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class LiquipediaParser {
 
     private static final String MATCHES_PAGE_URL = "https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches";
     private static final String MATCHES_STATS_URL = "https://liquipedia.net/dota2/Special:Stream/twitch/";
 
+    private final UkrainianTeamService teamService;
 
-    private final TeamService teamService;
+    Logger logger = LoggerFactory.getLogger(LiquipediaParser.class);
 
-    public LiquipediaParser(TeamService teamService) {
-        this.teamService = teamService;
-    }
 
     public List<Match> parseDayMatches() {
         Document matchesPage;
@@ -41,7 +44,9 @@ public class LiquipediaParser {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return parseMatches(matchesPage);
+        List<Match> parsedMatches = parseMatches(matchesPage);
+        logger.info("Parsed day matches from Liquipedia: " + parsedMatches);
+        return parsedMatches;
     }
 
     private List<Match> parseMatches(Document matchesPage) {
@@ -62,8 +67,12 @@ public class LiquipediaParser {
 
         String teamOneName = matchBox.getElementsByClass("team-left").get(0).text();
         String teamTwoName = matchBox.getElementsByClass("team-right").get(0).text();
-        int matchFormat = Integer.parseInt(matchBox.getElementsByClass("versus-lower").get(0).text().substring(0, 3));
-
+        int matchFormat;
+        try {
+            matchFormat = Integer.parseInt(matchBox.getElementsByClass("versus-lower").get(0).text().substring(3, 4));
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
         if (filterUncertainMatches(teamOneName, teamTwoName) || filterUkrainianTeams(teamOneName, teamTwoName))
             return Optional.empty();
 
@@ -97,22 +106,19 @@ public class LiquipediaParser {
     }
 
     private boolean filterUkrainianTeams(String teamOneName, String teamTwoName) {
-        List<String> ukrainianTeams = teamService.getUkrainianTeams().stream().map(Team::getName).toList();
+        List<String> ukrainianTeams = teamService.getUkrainianTeams().stream().map(UkrainianTeam::getName).toList();
         return !ukrainianTeams.contains(teamOneName) && !ukrainianTeams.contains(teamTwoName);
     }
 
     private Optional<String> formatTime(String dateTimeString) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy - HH:mm z", Locale.ENGLISH);
-
         LocalDateTime parseDateTime = LocalDateTime.parse(dateTimeString, formatter);
-
         LocalDateTime currentDateTime = LocalDateTime.now();
 
         if (currentDateTime.getDayOfMonth() != parseDateTime.getDayOfMonth())
             return Optional.empty();
 
         LocalTime resultTime = parseDateTime.toLocalTime().plusHours(2);
-
 
         DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("HH:mm");
         return Optional.of(resultTime.format(formatter2));
@@ -135,10 +141,11 @@ public class LiquipediaParser {
 
         for (Element element : elements) {
             if (!filterStartedMatch(element))
-                return startedMatches;
+                break;
 
             parseStartedMatch(element).ifPresent(startedMatches::add);
         }
+        logger.info("Parsed started matches from Liquipedia: " + startedMatches);
         return startedMatches;
     }
 
@@ -146,7 +153,12 @@ public class LiquipediaParser {
 
         String teamOneName = matchBox.getElementsByClass("team-left").get(0).text();
         String teamTwoName = matchBox.getElementsByClass("team-right").get(0).text();
-        int matchFormat = Integer.parseInt(matchBox.getElementsByClass("versus-lower").get(0).text().substring(0, 3));
+        int matchFormat;
+        try {
+            matchFormat = Integer.parseInt(matchBox.getElementsByClass("versus-lower").get(0).text().substring(3, 4));
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
         String twitchChannel = matchBox.getElementsByClass("timer-object-countdown-only").get(0)
                 .attr("data-stream-twitch");
         int firstTeamScore = Integer.parseInt(matchBox.getElementsByClass("versus").get(0)
