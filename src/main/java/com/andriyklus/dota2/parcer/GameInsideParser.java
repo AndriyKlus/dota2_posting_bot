@@ -17,7 +17,7 @@ public class GameInsideParser {
 
     private static final String PAGE_URL = "https://gameinside.ua/news/";
 
-    public static List<GameinsideNewsPost> parseDota2AndCS2News() {
+    public static List<GameinsideNewsPost> parseDOTA2News() {
         Document matchesPage;
         try {
             matchesPage = Jsoup.parse(new URL(PAGE_URL), 30000);
@@ -33,10 +33,12 @@ public class GameInsideParser {
                 stream()
                 .map(GameInsideParser::parseNews)
                 .filter(gameinsideNewsPost -> Strings.isNotEmpty(gameinsideNewsPost.getImageUrl()))
+                .filter(gameinsideNewsPost -> gameinsideNewsPost.getTags().contains("DoTA2") || gameinsideNewsPost.getTags().contains("CS"))
                 .collect(Collectors.toList());
     }
 
     private static GameinsideNewsPost parseNews(Element news) {
+        String id = news.attr("id");
         String header = news.getElementsByClass("newsList__textWrap").get(0)
                 .getElementsByTag("h2").get(0).text();
         String tags = news.getElementsByClass("cat-links").get(0)
@@ -48,6 +50,7 @@ public class GameInsideParser {
         String newsUrl = news.getElementsByClass("newsList__textWrap").get(0)
                 .getElementsByTag("h2").get(0).getElementsByTag("a").get(0).attr("href");
         return GameinsideNewsPost.builder()
+                .id(id)
                 .header(header)
                 .tags(tags)
                 .body(body)

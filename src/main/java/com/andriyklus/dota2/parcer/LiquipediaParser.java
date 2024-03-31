@@ -159,8 +159,6 @@ public class LiquipediaParser {
         } catch (NumberFormatException e) {
             return Optional.empty();
         }
-        String twitchChannel = matchBox.getElementsByClass("timer-object-countdown-only").get(0)
-                .attr("data-stream-twitch");
         int firstTeamScore = Integer.parseInt(matchBox.getElementsByClass("versus").get(0)
                 .getElementsByTag("div").get(0)
                 .getElementsByTag("div").get(0).text().substring(0, 1));
@@ -185,7 +183,13 @@ public class LiquipediaParser {
                 .tournament(Tournament.builder().name(tournament).build())
                 .format(matchFormat)
                 .build();
-        parseMatchStats(twitchChannel, match);
+        try {
+            String twitchChannel = matchBox.getElementsByClass("timer-object-countdown-only").get(0)
+                    .attr("data-stream-twitch");
+            parseMatchStats(twitchChannel, match);
+        } catch (Exception e) {
+            logger.error("Cannot parse players of teams");
+        }
         return Optional.of(match);
     }
 
@@ -193,10 +197,10 @@ public class LiquipediaParser {
         Document statsPage;
         try {
             statsPage = Jsoup.parse(new URL(MATCHES_STATS_URL + twitchChannel), 30000);
+            parsePlayers(statsPage, match);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            logger.error("Couldn't reach url: " + MATCHES_STATS_URL + twitchChannel);
         }
-        parsePlayers(statsPage, match);
     }
 
     private void parsePlayers(Document document, Match match) {

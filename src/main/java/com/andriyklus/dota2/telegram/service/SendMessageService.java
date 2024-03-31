@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 
 @Service
@@ -86,7 +87,7 @@ public class SendMessageService {
         for(Match match : matches) {
             stringBuilder.append("\uD83D\uDFE2 Матч: <b>")
                     .append(match.getTeamOne().getName())
-                    .append("</b> \uD83C\uDD9A ")
+                    .append("</b> vs ")
                     .append("<b>")
                     .append(match.getTeamTwo().getName())
                     .append("</b> (Bo")
@@ -110,7 +111,7 @@ public class SendMessageService {
     }
 
     private String formatMessageForStartedMatch(Match match) {
-        return new StringBuilder().append("⏰ Розпочинається матч: <b>")
+       StringBuilder stringBuilder = new StringBuilder().append("⏰ Розпочинається матч: <b>")
                 .append(match.getTeamOne().getName())
                 .append("</b> vs <b>")
                 .append(match.getTeamTwo().getName())
@@ -118,16 +119,18 @@ public class SendMessageService {
                 .append(match.getFormat())
                 .append("\n\uD83C\uDFC6 Турнір: <b>")
                 .append(match.getTournament().getName())
-                .append("</b>\n")
-                .append("\uD83D\uDC65 Склади команд\n<b>")
-                .append(match.getTeamOne().getName())
-                .append("</b>: ")
-                .append(String.join(", ", match.getTeamOne().getPlayers()))
-                .append("\n<b>")
-                .append(match.getTeamTwo().getName())
-                .append("</b>: ")
-                .append(String.join(", ", match.getTeamTwo().getPlayers()))
-                .toString();
+                .append("</b>\n");
+        if(Objects.isNull(match.getTeamOne().getPlayers()) || Objects.isNull(match.getTeamTwo().getPlayers())) {
+                stringBuilder.append("\uD83D\uDC65 Склади команд\n<b>")
+                    .append(match.getTeamOne().getName())
+                    .append("</b>: ")
+                    .append(String.join(", ", match.getTeamOne().getPlayers()))
+                    .append("\n<b>")
+                    .append(match.getTeamTwo().getName())
+                    .append("</b>: ")
+                    .append(String.join(", ", match.getTeamTwo().getPlayers()));
+        }
+        return stringBuilder.toString();
     }
 
 

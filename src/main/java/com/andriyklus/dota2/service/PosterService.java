@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.andriyklus.dota2.parcer.GameInsideParser.parseDota2AndCS2News;
+import static com.andriyklus.dota2.parcer.GameInsideParser.parseDOTA2News;
 
 @Component
 @EnableScheduling
@@ -39,29 +39,14 @@ public class PosterService {
 
     @Scheduled(fixedRate = 15 * 60 * 1000)
     public void postGameInsideNews() {
-        List<GameinsideNewsPost> news = parseDota2AndCS2News();
+        List<GameinsideNewsPost> news = parseDOTA2News();
         news = getNewPosts(news);
         news.forEach(sendMessageService::postGameInsideNews);
         if (news.size() > 0)
             gameinsideNewsPostService.saveLastNewsPost(news.get(0));
     }
 
-    private List<GameinsideNewsPost> getNewPosts(List<GameinsideNewsPost> news) {
-        Optional<GameinsideNewsPost> lastNewsPost = gameinsideNewsPostService.getLastNewsPost();
-        if (lastNewsPost.isEmpty())
-            return news;
-        List<GameinsideNewsPost> newPosts = new ArrayList<>();
-        String header = lastNewsPost.get().getHeader();
-        for (GameinsideNewsPost gameinsideNewsPost : news) {
-            if (gameinsideNewsPost.getHeader().equals(header)) {
-                break;
-            }
-            newPosts.add(gameinsideNewsPost);
-        }
-        return newPosts;
-    }
-
-    @Scheduled(cron = "0 0 9 * * *")
+    @Scheduled(cron = "0 0 7 * * *")
     public void postTodayMatches() {
         List<Match> matches = liquipediaParser.parseDayMatches();
         if (matches.size() == 0)
@@ -69,7 +54,6 @@ public class PosterService {
 
         sendMessageService.postTodayGames(matches);
     }
-
     @Scheduled(fixedRate = 5 * 60 * 1000)
     public void postStartedMatch() {
         List<Match> startedMatchesDB = matchService.getStartedMatches();
@@ -91,6 +75,21 @@ public class PosterService {
 
         matchesToPost.forEach(this::chooseTypeOfMessage);
         matchesToPost.forEach(matchService::save);
+    }
+
+    private List<GameinsideNewsPost> getNewPosts(List<GameinsideNewsPost> news) {
+        Optional<GameinsideNewsPost> lastNewsPost = gameinsideNewsPostService.getLastNewsPost();
+        if (lastNewsPost.isEmpty())
+            return news;
+        List<GameinsideNewsPost> newPosts = new ArrayList<>();
+        String id = lastNewsPost.get().getId();
+        for (GameinsideNewsPost gameinsideNewsPost : news) {
+            if (gameinsideNewsPost.getId().equals(id)) {
+                break;
+            }
+            newPosts.add(gameinsideNewsPost);
+        }
+        return newPosts;
     }
 
     private boolean filterMatchFromDB(Match match, List<Match> matches) {

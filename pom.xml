@@ -11,7 +11,7 @@
 	<groupId>com.andriyklus</groupId>
 	<artifactId>dota2</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>gameinside</name>
+	<name>dota2_posting_bot</name>
 	<description>TBD</description>
 	<properties>
 		<java.version>17</java.version>
