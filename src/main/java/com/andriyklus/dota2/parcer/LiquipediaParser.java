@@ -34,7 +34,7 @@ public class LiquipediaParser {
 
     private final UkrainianTeamService teamService;
 
-    Logger logger = LoggerFactory.getLogger(LiquipediaParser.class);
+    private final Logger logger = LoggerFactory.getLogger(LiquipediaParser.class);
 
 
     public List<Match> parseDayMatches() {
@@ -45,7 +45,10 @@ public class LiquipediaParser {
             throw new RuntimeException(e);
         }
         List<Match> parsedMatches = parseMatches(matchesPage);
-        logger.info("Parsed day matches from Liquipedia: " + parsedMatches);
+
+        if (parsedMatches.size() > 0) {
+            logger.info("Parsed day matches from Liquipedia: " + parsedMatches);
+        }
         return parsedMatches;
     }
 
@@ -142,10 +145,12 @@ public class LiquipediaParser {
         for (Element element : elements) {
             if (!filterStartedMatch(element))
                 break;
-
             parseStartedMatch(element).ifPresent(startedMatches::add);
         }
-        logger.info("Parsed started matches from Liquipedia: " + startedMatches);
+        if (startedMatches.size() > 0) {
+            logger.info("Parsed started matches from Liquipedia: " + startedMatches);
+        }
+
         return startedMatches;
     }
 

@@ -3,6 +3,7 @@ package com.andriyklus.dota2.service;
 import com.andriyklus.dota2.domain.Match;
 import com.andriyklus.dota2.domain.GameinsideNewsPost;
 import com.andriyklus.dota2.domain.UkrainianTeam;
+import com.andriyklus.dota2.parcer.GameInsideParser;
 import com.andriyklus.dota2.parcer.LiquipediaParser;
 import com.andriyklus.dota2.service.db.GameinsideNewsPostService;
 import com.andriyklus.dota2.service.db.MatchService;
@@ -33,13 +34,14 @@ public class PosterService {
     private final GameinsideNewsPostService gameinsideNewsPostService;
     private final MatchService matchService;
     private final UkrainianTeamService teamService;
+    private final GameInsideParser gameInsideParser;
 
     Logger logger = LoggerFactory.getLogger(PosterService.class);
 
 
     @Scheduled(fixedRate = 15 * 60 * 1000)
     public void postGameInsideNews() {
-        List<GameinsideNewsPost> news = parseDOTA2News();
+        List<GameinsideNewsPost> news = gameInsideParser.parseDOTA2News();
         news = getNewPosts(news);
         news.forEach(sendMessageService::postGameInsideNews);
         if (news.size() > 0)

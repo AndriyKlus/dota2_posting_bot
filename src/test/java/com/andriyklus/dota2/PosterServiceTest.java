@@ -36,7 +36,7 @@ public class PosterServiceTest {
 
     @BeforeEach
     public void setup() {
-        posterService = new PosterService(sendMessageService, liquipediaParser, null, matchService, null);
+        posterService = new PosterService(sendMessageService, liquipediaParser, null, matchService, null, null);
     }
 
     @Test
