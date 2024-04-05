@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.andriyklus.dota2.parcer.GameInsideParser.parseDOTA2News;
-
 @Component
 @EnableScheduling
 @Slf4j
