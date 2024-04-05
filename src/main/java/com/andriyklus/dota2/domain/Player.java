@@ -1,7 +1,9 @@
 package com.andriyklus.dota2.domain;
 
-public class Player {
+import lombok.Data;
 
+@Data
+public class Player {
     String name;
 
 }

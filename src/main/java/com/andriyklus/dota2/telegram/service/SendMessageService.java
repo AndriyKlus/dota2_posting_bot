@@ -115,9 +115,9 @@ public class SendMessageService {
                 .append(match.getTeamOne().getName())
                 .append("</b> vs <b>")
                 .append(match.getTeamTwo().getName())
-                .append("</b> ")
+                .append("</b> (Bo")
                 .append(match.getFormat())
-                .append("\n\uD83C\uDFC6 Турнір: <b>")
+                .append(")\n\uD83C\uDFC6 Турнір: <b>")
                 .append(match.getTournament().getName())
                 .append("</b>\n");
         if(Objects.isNull(match.getTeamOne().getPlayers()) || Objects.isNull(match.getTeamTwo().getPlayers())) {

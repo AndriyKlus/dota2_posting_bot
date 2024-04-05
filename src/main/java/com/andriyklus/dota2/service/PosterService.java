@@ -70,7 +70,7 @@ public class PosterService {
     public void postOngoingMatch() {
         List<Match> startedMatchesDB = matchService.getStartedMatches();
         List<Match> matchesToPost = liquipediaParser.parseStartedMatches().stream()
-                .filter(match -> !filterOldMatchFromDB(match, startedMatchesDB))
+                .filter(match -> filterOldMatchFromDB(match, startedMatchesDB))
                 .toList();
 
         matchesToPost.forEach(this::chooseTypeOfMessage);

@@ -209,5 +209,50 @@ public class LiquipediaParser {
         match.getTeamTwo().setPlayers(tables.get(1).getElementsByAttributeValue("id", "player").stream().map(Element::text).collect(Collectors.toList()));
     }
 
+    public List<Match> parseEndedMatches() {
+        Document matchesPage;
+        try {
+            matchesPage = Jsoup.parse(new URL(MATCHES_PAGE_URL), 30000);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return parseEndedMatches(matchesPage);
+    }
+
+    private List<Match> parseEndedMatches(Document matchesPage) {
+        List<Match> endedMatches = new ArrayList<>();
+        Elements endedMatchesBoxes = matchesPage.getElementsByAttributeValue("data-toggle-area-content", "3")
+                .get(0)
+                .getElementsByClass("table");
+
+        for (Element element : endedMatchesBoxes) {
+            if (!filterStartedMatch(element))
+                break;
+
+            endedMatches.add(parseEndedMatch(element));
+        }
+        logger.info("Parsed ended matches from Liquipedia: " + endedMatches);
+        return endedMatches;
+    }
+
+    private Match parseEndedMatch(Element endedMatchBox) {
+        String firstTeamName = endedMatchBox.getElementsByClass("team-left").text();
+        String secondTeamName = endedMatchBox.getElementsByClass("team-right").text();
+        int firstTeamScore = Integer.parseInt(endedMatchBox.getElementsByClass("versus").get(0)
+                .getElementsByTag("div").get(0).text().substring(0, 1));
+        int secondTeamScore = Integer.parseInt(endedMatchBox.getElementsByClass("versus").get(0)
+                .getElementsByTag("div").get(0).text().substring(2, 3));
+        return Match.builder()
+                .teamOne(Team.builder()
+                        .name(firstTeamName)
+                        .score(firstTeamScore)
+                        .build())
+                .teamTwo(Team.builder()
+                        .name(secondTeamName)
+                        .score(secondTeamScore)
+                        .build())
+                .build();
+    }
+
 
 }
