@@ -2,6 +2,7 @@ package com.andriyklus.dota2.service;
 
 import com.andriyklus.dota2.domain.Match;
 import com.andriyklus.dota2.domain.GameinsideNewsPost;
+import com.andriyklus.dota2.domain.Team;
 import com.andriyklus.dota2.domain.UkrainianTeam;
 import com.andriyklus.dota2.parcer.GameInsideParser;
 import com.andriyklus.dota2.parcer.LiquipediaParser;
@@ -17,9 +18,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 @EnableScheduling
@@ -73,7 +72,7 @@ public class PosterService {
                 .filter(match -> filterOldMatchFromDB(match, startedMatchesDB))
                 .toList();
 
-        matchesToPost.forEach(this::chooseTypeOfMessage);
+        matchesToPost.forEach(this::chooseTypeOfMessageForGameEnd);
         matchesToPost.forEach(matchService::save);
     }
 
@@ -106,20 +105,22 @@ public class PosterService {
                                 matchDB.getTeamTwo().getScore() != match.getTeamTwo().getScore()));
     }
 
-    private void chooseTypeOfMessage(Match match) {
-        switch (getGameWinner(match)) {
+    private void chooseTypeOfMessageForGameEnd(Match match) {
+        Map<Match, Team> gameWinner = new HashMap<>();
+
+        switch (getGameWinner(match, gameWinner)) {
             case 1 -> {
                 switch (getUkrainianTeam(match)) {
-                    case 1 -> sendMessageService.postUkrainianTeamWonGame(match);
-                    case 2 -> sendMessageService.postUkrainianTeamLostGame(match);
-                    default -> sendMessageService.postTwoUkrainianTeamsGame();
+                    case 1 -> sendMessageService.postUkrainianTeamWonGame(match, gameWinner.get(match));
+                    case 2 -> sendMessageService.postUkrainianTeamLostGame(match, gameWinner.get(match));
+                    default -> sendMessageService.postTwoUkrainianTeamsGame(match);
                 }
             }
             case 2 -> {
                 switch (getUkrainianTeam(match)) {
-                    case 1 -> sendMessageService.postUkrainianTeamLostGame(match);
-                    case 2 -> sendMessageService.postUkrainianTeamWonGame(match);
-                    default -> sendMessageService.postTwoUkrainianTeamsGame();
+                    case 1 -> sendMessageService.postUkrainianTeamLostGame(match, gameWinner.get(match));
+                    case 2 -> sendMessageService.postUkrainianTeamWonGame(match, gameWinner.get(match));
+                    default -> sendMessageService.postTwoUkrainianTeamsGame(match);
                 }
             }
         }
@@ -136,17 +137,28 @@ public class PosterService {
         return 2;
     }
 
-    private int getGameWinner(Match match) {
+    private int getGameWinner(Match match, Map<Match, Team> gameWinner) {
         Optional<Match> matchDB = matchService.findMatch(match);
         if (matchDB.isEmpty()) {
             logger.error("Match: " + match + "wasn't found in database");
             return -1;
         }
         match.setId(matchDB.get().getId());
-        if (match.getTeamOne().getScore() != match.getTeamOne().getScore())
+        if (match.getTeamOne().getScore() != matchDB.get().getTeamOne().getScore()) {
+            gameWinner.put(match, match.getTeamOne());
             return 1;
-        else
+        } else
+            gameWinner.put(match, match.getTeamTwo());
+        return 2;
+    }
+
+    private int getMatchResult(Match match) {
+        if (match.getTeamOne().getScore() > match.getTeamTwo().getScore()) {
+            return 1;
+        } else if (match.getTeamOne().getScore() < match.getTeamTwo().getScore()) {
             return 2;
+        }
+        return 0;
     }
 
 

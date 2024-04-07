@@ -18,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.andriyklus.dota2.domain.MatchStatus.NOT_STARTED;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -115,10 +114,9 @@ public class PosterServiceTest {
                         .score(0)
                         .build())
                 .tournament(Tournament.builder()
-                        .name("Some trnm")
+                        .name("Some team")
                         .build())
                 .time("123312")
-                .status(NOT_STARTED)
                 .format(3)
                 .build();
     }
@@ -134,10 +132,9 @@ public class PosterServiceTest {
                         .score(0)
                         .build())
                 .tournament(Tournament.builder()
-                        .name("Some trnm")
+                        .name("Some team")
                         .build())
                 .time("123312")
-                .status(NOT_STARTED)
                 .format(3)
                 .build();
     }

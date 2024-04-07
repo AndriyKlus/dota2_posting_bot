@@ -3,6 +3,7 @@ package com.andriyklus.dota2.telegram.service;
 
 import com.andriyklus.dota2.domain.Match;
 import com.andriyklus.dota2.domain.GameinsideNewsPost;
+import com.andriyklus.dota2.domain.Team;
 import com.andriyklus.dota2.telegram.messagesender.MessageSender;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
@@ -20,6 +21,8 @@ import java.util.Objects;
 @Service
 public class SendMessageService {
 
+    private final Long CHAT_ID = /*358029493L;*/ -1002029412738L;
+
     private final MessageSender messageSender;
 
 
@@ -29,8 +32,7 @@ public class SendMessageService {
 
     public void postGameInsideNews(GameinsideNewsPost gameinsideNewsPost) {
         var message = SendPhoto.builder()
-                .chatId(-1002029412738L)
-                //.chatId(358029493L)
+                .chatId(CHAT_ID)
                 .caption(formatMessageForGameinsideNews(gameinsideNewsPost))
                 .photo(new InputFile(gameinsideNewsPost.getImageUrl()))
                 .parseMode(ParseMode.HTML)
@@ -59,8 +61,7 @@ public class SendMessageService {
 
     public void postTodayGames(List<Match> matches) {
         var message = SendMessage.builder()
-                .chatId(-1002029412738L)
-                //.chatId(358029493L)
+                .chatId(CHAT_ID)
                 .text(formatMessageForTodayGames(matches))
                 .parseMode(ParseMode.HTML)
                 .build();
@@ -70,8 +71,7 @@ public class SendMessageService {
 
     public void postStartedMatch(Match match) {
         var message = SendMessage.builder()
-                .chatId(-1002029412738L)
-                //.chatId(358029493L)
+                .chatId(CHAT_ID)
                 .text(formatMessageForStartedMatch(match))
                 .parseMode(ParseMode.HTML)
                 .build();
@@ -120,7 +120,7 @@ public class SendMessageService {
                 .append(")\n\uD83C\uDFC6 Турнір: <b>")
                 .append(match.getTournament().getName())
                 .append("</b>\n");
-        if(Objects.isNull(match.getTeamOne().getPlayers()) || Objects.isNull(match.getTeamTwo().getPlayers())) {
+        if(Objects.nonNull(match.getTeamOne().getPlayers()) && Objects.nonNull(match.getTeamTwo().getPlayers())) {
                 stringBuilder.append("\uD83D\uDC65 Склади команд\n<b>")
                     .append(match.getTeamOne().getName())
                     .append("</b>: ")
@@ -134,12 +134,93 @@ public class SendMessageService {
     }
 
 
-    public void postTwoUkrainianTeamsGame() {
+    public void postUkrainianTeamWonGame(Match match, Team team) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatMessageUkrTeamWinGame(match, team))
+                .parseMode(ParseMode.HTML)
+                .build();
+
+        messageSender.sendMessage(message);
     }
 
-    public void postUkrainianTeamWonGame(Match match) {
+    public void postTwoUkrainianTeamsGame(Match match) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatMessageTwoUkrTeamsGame(match))
+                .parseMode(ParseMode.HTML)
+                .build();
+
+        messageSender.sendMessage(message);
     }
 
-    public void postUkrainianTeamLostGame(Match match) {
+    public void postUkrainianTeamLostGame(Match match, Team team) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatMessageUkrTeamLostGame(match, team))
+                .parseMode(ParseMode.HTML)
+                .build();
+
+        messageSender.sendMessage(message);
+    }
+
+    private String formatMessageUkrTeamWinGame(Match match, Team team) {
+        int gameNumber = match.getTeamOne().getScore() + match.getTeamTwo().getScore();
+        return "<b>" +
+                team.getName() +
+                "</b>" +
+                " перемогли <b>" +
+                (match.getTeamOne().getName().equals(team.getName()) ? match.getTeamTwo().getName() : match.getTeamOne().getName()) +
+                "</b> на " +
+                gameNumber +
+                " карті\n\n<b>" +
+                match.getTeamOne().getName() +
+                " " +
+                match.getTeamOne().getScore() +
+                " - " +
+                match.getTeamTwo().getScore() +
+                " " +
+                match.getTeamTwo().getName() +
+                "</b>";
+    }
+
+    private String formatMessageUkrTeamLostGame(Match match, Team team) {
+        int gameNumber = match.getTeamOne().getScore() + match.getTeamTwo().getScore();
+        return "<b>" +
+                (match.getTeamOne().getName().equals(team.getName()) ? match.getTeamTwo().getName() : match.getTeamOne().getName()) +
+                "</b>" +
+                " програли <b>" +
+                team.getName() +
+                "</b> на " +
+                gameNumber +
+                " карті\n\n<b>" +
+                match.getTeamOne().getName() +
+                " " +
+                match.getTeamOne().getScore() +
+                " - " +
+                match.getTeamTwo().getScore() +
+                " " +
+                match.getTeamTwo().getName() +
+                "</b>";
+    }
+
+    private String formatMessageTwoUkrTeamsGame(Match match) {
+        int gameNumber = match.getTeamOne().getScore() + match.getTeamTwo().getScore();
+        return "<b>" +
+                match.getTeamOne() +
+                "</b>" +
+                " програли <b>" +
+                match.getTeamTwo() +
+                "</b> на " +
+                gameNumber +
+                " карті\n\n<b>" +
+                match.getTeamOne().getName() +
+                " " +
+                match.getTeamOne().getScore() +
+                " - " +
+                match.getTeamTwo().getScore() +
+                " " +
+                match.getTeamTwo().getName() +
+                "</b>";
     }
 }

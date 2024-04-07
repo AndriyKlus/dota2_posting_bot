@@ -21,6 +21,4 @@ public class Match {
     private Tournament tournament;
     private String time;
     private int format;
-    private MatchStatus status;
-
 }

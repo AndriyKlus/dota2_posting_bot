@@ -33,4 +33,9 @@ public class MatchService {
         return mongoOperations.find(query, Match.class).stream().findAny();
     }
 
+    public void deleteByMatch(Match match) {
+        mongoOperations.remove(new Query(Criteria.where("teamOne.name").is(match.getTeamOne().getName())
+                .and("teamTwo.name").is(match.getTeamTwo().getName())));
+    }
+
 }
