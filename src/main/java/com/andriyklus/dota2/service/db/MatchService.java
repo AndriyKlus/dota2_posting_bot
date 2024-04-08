@@ -2,6 +2,7 @@ package com.andriyklus.dota2.service.db;
 
 import com.andriyklus.dota2.domain.Match;
 import com.andriyklus.dota2.repository.MatchRepository;
+import com.mongodb.client.result.DeleteResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -33,9 +34,9 @@ public class MatchService {
         return mongoOperations.find(query, Match.class).stream().findAny();
     }
 
-    public void deleteByMatch(Match match) {
-        mongoOperations.remove(new Query(Criteria.where("teamOne.name").is(match.getTeamOne().getName())
-                .and("teamTwo.name").is(match.getTeamTwo().getName())));
+    public DeleteResult deleteByTeamsNames(String teamOne, String teamTwo) {
+        return mongoOperations.remove(new Query(Criteria.where("teamOne.name").is(teamOne)
+                .and("teamTwo.name").is(teamTwo)));
     }
 
 }

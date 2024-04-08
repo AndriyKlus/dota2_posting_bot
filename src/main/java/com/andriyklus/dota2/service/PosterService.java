@@ -76,6 +76,16 @@ public class PosterService {
         matchesToPost.forEach(matchService::save);
     }
 
+    @Scheduled(fixedRate = 5 * 60 * 1000)
+    private void postEndedMatches() {
+        List<Match> startedMatchesDB = matchService.getStartedMatches();
+        List<Match> matchesToPost = liquipediaParser.parseEndedMatches().stream()
+                .filter(match -> filterOldMatchFromDB(match, startedMatchesDB))
+                .toList();
+
+        matchesToPost.forEach(this::chooseTypeOfMessageForMatchEnd);
+    }
+
     private List<GameinsideNewsPost> getNewPosts(List<GameinsideNewsPost> news) {
         Optional<GameinsideNewsPost> lastNewsPost = gameinsideNewsPostService.getLastNewsPost();
         if (lastNewsPost.isEmpty())
@@ -107,7 +117,6 @@ public class PosterService {
 
     private void chooseTypeOfMessageForGameEnd(Match match) {
         Map<Match, Team> gameWinner = new HashMap<>();
-
         switch (getGameWinner(match, gameWinner)) {
             case 1 -> {
                 switch (getUkrainianTeam(match)) {
@@ -121,6 +130,26 @@ public class PosterService {
                     case 1 -> sendMessageService.postUkrainianTeamLostGame(match, gameWinner.get(match));
                     case 2 -> sendMessageService.postUkrainianTeamWonGame(match, gameWinner.get(match));
                     default -> sendMessageService.postTwoUkrainianTeamsGame(match);
+                }
+            }
+        }
+    }
+
+    private void chooseTypeOfMessageForMatchEnd(Match match) {
+        Map<Match, Team> matchWinner = new HashMap<>();
+        switch (getMatchResult(match, matchWinner)) {
+            case 1 -> {
+                switch (getUkrainianTeam(match)) {
+                    case 1 -> sendMessageService.postUkrainianTeamWonMatch(match, matchWinner.get(match));
+                    case 2 -> sendMessageService.postUkrainianTeamLostMatch(match, matchWinner.get(match));
+                    default -> sendMessageService.postTwoUkrainianTeamsMatch(match);
+                }
+            }
+            case 2 -> {
+                switch (getUkrainianTeam(match)) {
+                    case 1 -> sendMessageService.postUkrainianTeamLostMatch(match, matchWinner.get(match));
+                    case 2 -> sendMessageService.postUkrainianTeamWonMatch(match, matchWinner.get(match));
+                    default -> sendMessageService.postTwoUkrainianTeamsMatch(match);
                 }
             }
         }
@@ -152,10 +181,13 @@ public class PosterService {
         return 2;
     }
 
-    private int getMatchResult(Match match) {
+    private int getMatchResult(Match match, Map<Match, Team> matchWinner) {
+        matchService.deleteByTeamsNames(match.getTeamOne().getName(), match.getTeamTwo().getName());
         if (match.getTeamOne().getScore() > match.getTeamTwo().getScore()) {
+            matchWinner.put(match, match.getTeamOne());
             return 1;
         } else if (match.getTeamOne().getScore() < match.getTeamTwo().getScore()) {
+            matchWinner.put(match, match.getTeamTwo());
             return 2;
         }
         return 0;

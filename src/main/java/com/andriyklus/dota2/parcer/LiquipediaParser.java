@@ -19,10 +19,7 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -225,28 +222,30 @@ public class LiquipediaParser {
     }
 
     private List<Match> parseEndedMatches(Document matchesPage) {
-        List<Match> endedMatches = new ArrayList<>();
-        Elements endedMatchesBoxes = matchesPage.getElementsByAttributeValue("data-toggle-area-content", "3")
-                .get(0)
-                .getElementsByClass("table");
+                Elements endedMatchesBoxes = matchesPage.getElementsByAttributeValue("data-toggle-area-content", "3")
+                .get(2)
+                .getElementsByTag("table");
 
-        for (Element element : endedMatchesBoxes) {
-            if (!filterStartedMatch(element))
-                break;
-
-            endedMatches.add(parseEndedMatch(element));
-        }
-        logger.info("Parsed ended matches from Liquipedia: " + endedMatches);
-        return endedMatches;
+        return endedMatchesBoxes.stream()
+                .map(this::parseEndedMatch)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private Match parseEndedMatch(Element endedMatchBox) {
         String firstTeamName = endedMatchBox.getElementsByClass("team-left").text();
         String secondTeamName = endedMatchBox.getElementsByClass("team-right").text();
-        int firstTeamScore = Integer.parseInt(endedMatchBox.getElementsByClass("versus").get(0)
-                .getElementsByTag("div").get(0).text().substring(0, 1));
-        int secondTeamScore = Integer.parseInt(endedMatchBox.getElementsByClass("versus").get(0)
-                .getElementsByTag("div").get(0).text().substring(2, 3));
+        int firstTeamScore, secondTeamScore;
+        try {
+            firstTeamScore = Integer.parseInt(endedMatchBox.getElementsByClass("versus").get(0)
+                    .getElementsByTag("div").get(0).text().substring(0, 1));
+            secondTeamScore = Integer.parseInt(endedMatchBox.getElementsByClass("versus").get(0)
+                    .getElementsByTag("div").get(0).text().substring(2, 3));
+        } catch (NumberFormatException e) {
+            logger.error("One of the team forfeited");
+            return null;
+        }
+        String tournamentName = endedMatchBox.getElementsByClass("tournament-text").text();
         return Match.builder()
                 .teamOne(Team.builder()
                         .name(firstTeamName)
@@ -255,6 +254,9 @@ public class LiquipediaParser {
                 .teamTwo(Team.builder()
                         .name(secondTeamName)
                         .score(secondTeamScore)
+                        .build())
+                .tournament(Tournament.builder()
+                        .name(tournamentName)
                         .build())
                 .build();
     }

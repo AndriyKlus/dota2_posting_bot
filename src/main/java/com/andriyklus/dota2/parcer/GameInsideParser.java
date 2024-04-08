@@ -42,7 +42,7 @@ public class GameInsideParser {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .filter(gameinsideNewsPost -> Strings.isNotEmpty(gameinsideNewsPost.getImageUrl()))
-                .filter(gameinsideNewsPost -> gameinsideNewsPost.getTags().contains("DoTA2") || gameinsideNewsPost.getTags().contains("CS"))
+                .filter(gameinsideNewsPost -> gameinsideNewsPost.getTags().contains("DoTA2"))
                 .collect(Collectors.toList());
     }
 
