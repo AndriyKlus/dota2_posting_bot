@@ -105,7 +105,7 @@ public class SendMessageService {
 
     private String getFormattedDate() {
         LocalDate currentDate = LocalDate.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM", new Locale("uk", "UA"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM", new Locale("uk", "UA"));
 
         return currentDate.format(formatter);
     }

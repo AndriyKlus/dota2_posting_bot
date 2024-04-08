@@ -81,6 +81,7 @@ public class LiquipediaParser {
         try {
             time = formatTime(matchBox.getElementsByClass("timer-object-countdown-only").get(0).text()).orElseThrow();
         } catch (Exception e) {
+            logger.error("Couldn't parse time");
             return Optional.empty();
         }
 
@@ -111,7 +112,7 @@ public class LiquipediaParser {
     }
 
     private Optional<String> formatTime(String dateTimeString) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy - HH:mm z", Locale.ENGLISH);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy - HH:mm z", Locale.ENGLISH);
         LocalDateTime parseDateTime = LocalDateTime.parse(dateTimeString, formatter);
         LocalDateTime currentDateTime = LocalDateTime.now();
 
