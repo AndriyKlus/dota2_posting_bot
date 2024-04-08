@@ -242,7 +242,7 @@ public class LiquipediaParser {
             secondTeamScore = Integer.parseInt(endedMatchBox.getElementsByClass("versus").get(0)
                     .getElementsByTag("div").get(0).text().substring(2, 3));
         } catch (NumberFormatException e) {
-            logger.error("One of the team forfeited");
+            //logger.error("One of the team forfeited");
             return null;
         }
         String tournamentName = endedMatchBox.getElementsByClass("tournament-text").text();

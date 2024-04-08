@@ -36,7 +36,7 @@ public class MatchService {
 
     public DeleteResult deleteByTeamsNames(String teamOne, String teamTwo) {
         return mongoOperations.remove(new Query(Criteria.where("teamOne.name").is(teamOne)
-                .and("teamTwo.name").is(teamTwo)));
+                .and("teamTwo.name").is(teamTwo)), Match.class);
     }
 
 }
