@@ -144,10 +144,10 @@ public class SendMessageService {
         messageSender.sendMessage(message);
     }
 
-    public void postTwoUkrainianTeamsGame(Match match) {
+    public void postTwoUkrainianTeamsGame(Match match, Team team) {
         var message = SendMessage.builder()
                 .chatId(CHAT_ID)
-                .text(formatMessageTwoUkrTeamsGame(match))
+                .text(formatMessageTwoUkrTeamsGame(match, team))
                 .parseMode(ParseMode.HTML)
                 .build();
 
@@ -204,13 +204,13 @@ public class SendMessageService {
                 "</b>";
     }
 
-    private String formatMessageTwoUkrTeamsGame(Match match) {
+    private String formatMessageTwoUkrTeamsGame(Match match, Team team) {
         int gameNumber = match.getTeamOne().getScore() + match.getTeamTwo().getScore();
         return "<b>" +
-                match.getTeamOne() +
+                team.getName() +
                 "</b>" +
-                " програли <b>" +
-                match.getTeamTwo() +
+                " перемогли <b>" +
+                (match.getTeamOne().getName().equals(team.getName()) ? match.getTeamTwo().getName() : match.getTeamOne().getName()) +
                 "</b> на " +
                 gameNumber +
                 " карті\n\n<b>" +
@@ -310,5 +310,11 @@ public class SendMessageService {
                 match.getTeamTwo().getName() +
                 "</b>";
     }
+
+    public void postDayResults(List<Match> matches) {
+    }
+
+
+
 
 }

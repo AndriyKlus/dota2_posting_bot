@@ -64,7 +64,6 @@ public class LiquipediaParser {
 
         if (filterStartedMatch(matchBox))
             return Optional.empty();
-
         String teamOneName = matchBox.getElementsByClass("team-left").get(0).text();
         String teamTwoName = matchBox.getElementsByClass("team-right").get(0).text();
         int matchFormat;
@@ -236,6 +235,10 @@ public class LiquipediaParser {
     private Match parseEndedMatch(Element endedMatchBox) {
         String firstTeamName = endedMatchBox.getElementsByClass("team-left").text();
         String secondTeamName = endedMatchBox.getElementsByClass("team-right").text();
+
+        if (filterUkrainianTeams(firstTeamName, secondTeamName))
+            return null;
+
         int firstTeamScore, secondTeamScore;
         try {
             firstTeamScore = Integer.parseInt(endedMatchBox.getElementsByClass("versus").get(0)
@@ -247,6 +250,13 @@ public class LiquipediaParser {
             return null;
         }
         String tournamentName = endedMatchBox.getElementsByClass("tournament-text").text();
+        String time;
+        try {
+            time = formatTime(endedMatchBox.getElementsByClass("match-countdown").get(0).text()).orElseThrow();
+        } catch (Exception e) {
+            return null;
+        }
+
         return Match.builder()
                 .teamOne(Team.builder()
                         .name(firstTeamName)
@@ -259,8 +269,8 @@ public class LiquipediaParser {
                 .tournament(Tournament.builder()
                         .name(tournamentName)
                         .build())
+                .time(time)
                 .build();
     }
-
 
 }

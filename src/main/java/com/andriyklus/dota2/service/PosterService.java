@@ -86,6 +86,16 @@ public class PosterService {
         matchesToPost.forEach(this::chooseTypeOfMessageForMatchEnd);
     }
 
+    @Scheduled(cron = "0 0 7 * * *")
+    //@Scheduled(fixedRate = 5 * 60 * 1000)
+    private void postDayResults() {
+        List<Match> matches = liquipediaParser.parseEndedMatches();
+        if(matches.size() == 0)
+            return;
+
+        sendMessageService.postDayResults(matches);
+     }
+
     private List<GameinsideNewsPost> getNewPosts(List<GameinsideNewsPost> news) {
         Optional<GameinsideNewsPost> lastNewsPost = gameinsideNewsPostService.getLastNewsPost();
         if (lastNewsPost.isEmpty())
@@ -122,14 +132,14 @@ public class PosterService {
                 switch (getUkrainianTeam(match)) {
                     case 1 -> sendMessageService.postUkrainianTeamWonGame(match, gameWinner.get(match));
                     case 2 -> sendMessageService.postUkrainianTeamLostGame(match, gameWinner.get(match));
-                    default -> sendMessageService.postTwoUkrainianTeamsGame(match);
+                    default -> sendMessageService.postTwoUkrainianTeamsGame(match, gameWinner.get(match));
                 }
             }
             case 2 -> {
                 switch (getUkrainianTeam(match)) {
                     case 1 -> sendMessageService.postUkrainianTeamLostGame(match, gameWinner.get(match));
                     case 2 -> sendMessageService.postUkrainianTeamWonGame(match, gameWinner.get(match));
-                    default -> sendMessageService.postTwoUkrainianTeamsGame(match);
+                    default -> sendMessageService.postTwoUkrainianTeamsGame(match, gameWinner.get(match));
                 }
             }
         }
