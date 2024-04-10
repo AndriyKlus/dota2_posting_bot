@@ -4,6 +4,8 @@ package com.andriyklus.dota2.telegram.service;
 import com.andriyklus.dota2.domain.Match;
 import com.andriyklus.dota2.domain.GameinsideNewsPost;
 import com.andriyklus.dota2.domain.Team;
+import com.andriyklus.dota2.domain.UkrainianTeam;
+import com.andriyklus.dota2.service.db.UkrainianTeamService;
 import com.andriyklus.dota2.telegram.messagesender.MessageSender;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
@@ -24,10 +26,12 @@ public class SendMessageService {
     private final Long CHAT_ID = /*358029493L;*/ -1002029412738L;
 
     private final MessageSender messageSender;
+    private UkrainianTeamService ukrainianTeamService;
 
 
-    public SendMessageService(MessageSender messageSender) {
+    public SendMessageService(MessageSender messageSender, UkrainianTeamService ukrainianTeamService) {
         this.messageSender = messageSender;
+        this.ukrainianTeamService = ukrainianTeamService;
     }
 
     public void postGameInsideNews(GameinsideNewsPost gameinsideNewsPost) {
@@ -84,7 +88,7 @@ public class SendMessageService {
         stringBuilder.append("\uD83D\uDCFA Матчі українських команд на ")
                 .append(getFormattedDate())
                 .append("\n\n");
-        for(Match match : matches) {
+        for (Match match : matches) {
             stringBuilder.append("\uD83D\uDFE2 Матч: <b>")
                     .append(match.getTeamOne().getName())
                     .append("</b> vs ")
@@ -111,7 +115,7 @@ public class SendMessageService {
     }
 
     private String formatMessageForStartedMatch(Match match) {
-       StringBuilder stringBuilder = new StringBuilder().append("⏰ Розпочинається матч: <b>")
+        StringBuilder stringBuilder = new StringBuilder().append("⏰ Розпочинається матч: <b>")
                 .append(match.getTeamOne().getName())
                 .append("</b> vs <b>")
                 .append(match.getTeamTwo().getName())
@@ -120,8 +124,8 @@ public class SendMessageService {
                 .append(")\n\uD83C\uDFC6 Турнір: <b>")
                 .append(match.getTournament().getName())
                 .append("</b>\n");
-        if(Objects.nonNull(match.getTeamOne().getPlayers()) && Objects.nonNull(match.getTeamTwo().getPlayers())) {
-                stringBuilder.append("\uD83D\uDC65 Склади команд\n<b>")
+        if (Objects.nonNull(match.getTeamOne().getPlayers()) && Objects.nonNull(match.getTeamTwo().getPlayers())) {
+            stringBuilder.append("\uD83D\uDC65 Склади команд\n<b>")
                     .append(match.getTeamOne().getName())
                     .append("</b>: ")
                     .append(String.join(", ", match.getTeamOne().getPlayers()))
@@ -312,9 +316,54 @@ public class SendMessageService {
     }
 
     public void postDayResults(List<Match> matches) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatDayResults(matches))
+                .parseMode(ParseMode.HTML)
+                .build();
+
+        messageSender.sendMessage(message);
     }
 
+    private String formatDayResults(List<Match> matches) {
+        StringBuilder s = new StringBuilder()
+                .append("\uD83D\uDCDD Результати сьогоднішніх матчів за участі українських команд:\n\n");
+        matches.forEach(match -> s.append(formatMatchResult(match)).append("\n\n"));
+        return s.toString();
+    }
 
+    private String formatMatchResult(Match match) {
+        return matchResultEmoji(match) +
+                " " +
+                "<b>" +
+                match.getTeamOne().getName() +
+                " " +
+                match.getTeamOne().getScore() +
+                " - " +
+                match.getTeamTwo().getScore() +
+                " " +
+                match.getTeamTwo().getName() +
+                "</b> " +
+                "на " +
+                match.getTournament().getName();
+    }
 
+    private String matchResultEmoji(Match match) {
+        List<String> ukrTeams = ukrainianTeamService.getUkrainianTeams().stream()
+                .map(UkrainianTeam::getName)
+                .toList();
+        if (ukrTeams.contains(match.getTeamOne().getName()) && ukrTeams.contains(match.getTeamTwo().getName()) ||
+                match.getTeamOne().getScore() == match.getTeamTwo().getScore())
+            return "\uD83D\uDFE0";
+        if (match.getTeamOne().getScore() > match.getTeamTwo().getScore()) {
+            if (ukrTeams.contains(match.getTeamOne().getName()))
+                return "\uD83D\uDFE2";
+            return "\uD83D\uDD34";
+        } else {
+            if (ukrTeams.contains(match.getTeamTwo().getName()))
+                return "\uD83D\uDFE2";
+            return "\uD83D\uDD34";
+        }
+    }
 
 }

@@ -53,7 +53,8 @@ public class PosterService {
 
         sendMessageService.postTodayGames(matches);
     }
-    @Scheduled(fixedRate = 5 * 60 * 1000)
+
+    @Scheduled(fixedRate = 3 * 60 * 1000)
     public void postStartedMatch() {
         List<Match> startedMatchesDB = matchService.getStartedMatches();
         List<Match> matchesToPost = liquipediaParser.parseStartedMatches().stream()
@@ -65,7 +66,7 @@ public class PosterService {
         matchesToPost.forEach(matchService::save);
     }
 
-    @Scheduled(fixedRate = 5 * 60 * 1000)
+    @Scheduled(fixedRate = 3 * 60 * 1000)
     public void postOngoingMatch() {
         List<Match> startedMatchesDB = matchService.getStartedMatches();
         List<Match> matchesToPost = liquipediaParser.parseStartedMatches().stream()
@@ -76,7 +77,7 @@ public class PosterService {
         matchesToPost.forEach(matchService::save);
     }
 
-    @Scheduled(fixedRate = 5 * 60 * 1000)
+    @Scheduled(fixedRate = 3 * 60 * 1000)
     private void postEndedMatches() {
         List<Match> startedMatchesDB = matchService.getStartedMatches();
         List<Match> matchesToPost = liquipediaParser.parseEndedMatches().stream()
@@ -86,8 +87,7 @@ public class PosterService {
         matchesToPost.forEach(this::chooseTypeOfMessageForMatchEnd);
     }
 
-    @Scheduled(cron = "0 0 7 * * *")
-    //@Scheduled(fixedRate = 5 * 60 * 1000)
+    @Scheduled(cron = "0 0 21 * * *")
     private void postDayResults() {
         List<Match> matches = liquipediaParser.parseEndedMatches();
         if(matches.size() == 0)
