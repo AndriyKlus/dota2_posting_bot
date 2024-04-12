@@ -118,7 +118,7 @@ public class LiquipediaParser {
         if (currentDateTime.getDayOfMonth() != parseDateTime.getDayOfMonth())
             return Optional.empty();
 
-        LocalTime resultTime = parseDateTime.toLocalTime().plusHours(2);
+        LocalTime resultTime = parseDateTime.toLocalTime().plusHours(1);
 
         DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("HH:mm");
         return Optional.of(resultTime.format(formatter2));

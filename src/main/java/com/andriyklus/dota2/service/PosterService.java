@@ -90,6 +90,7 @@ public class PosterService {
     @Scheduled(cron = "0 0 21 * * *")
     private void postDayResults() {
         List<Match> matches = liquipediaParser.parseEndedMatches();
+        Collections.reverse(matches);
         if(matches.size() == 0)
             return;
 

@@ -278,7 +278,7 @@ public class SendMessageService {
     }
 
     private String formatMessageUkrTeamLostMatch(Match match, Team team) {
-        return "Нажаль <b>" +
+        return "На жаль <b>" +
                 (match.getTeamOne().getName().equals(team.getName()) ? match.getTeamTwo().getName() : match.getTeamOne().getName()) +
                 "</b>" +
                 " програли <b>" +
