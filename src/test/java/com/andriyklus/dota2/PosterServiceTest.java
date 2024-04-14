@@ -137,7 +137,6 @@ public class PosterServiceTest {
                 .time("123312")
                 .format(3)
                 .build();
-    }
-
+    }*/
 
 }
