@@ -36,4 +36,8 @@ public class RussianFilter {
         return transfer.getPlayers().size() > 0;
     }
 
+    public boolean isNotRussianPlayer(String flag) {
+        return !flag.equals("\uD83C\uDDF7\uD83C\uDDFA");
+    }
+
 }

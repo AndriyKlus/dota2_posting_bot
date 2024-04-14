@@ -93,11 +93,11 @@ public class PosterService {
     private void postDayResults() {
         List<Match> matches = liquipediaParser.parseEndedMatches();
         Collections.reverse(matches);
-        if(matches.size() == 0)
+        if (matches.size() == 0)
             return;
 
         sendMessageService.postDayResults(matches);
-     }
+    }
 
     @Scheduled(fixedRate = 15 * 60 * 1000)
     private void postTransfers() {
@@ -106,10 +106,17 @@ public class PosterService {
                 .filter(russianFilter::isNotRussianTeam)
                 .filter(russianFilter::isNotRussianPlayer)
                 .forEach(this::chooseTransferMessage);
-        if(transfers.size() > 0) {
+        if (transfers.size() > 0) {
             transferService.saveLastTransfer(transfers.get(0));
         }
-     }
+    }
+
+    @Scheduled(cron = "0 0 7 * * *")
+    private void postDayInDota() {
+        DayInDota dayInDota = liquipediaParser.parseDayInDota();
+        if (dayInDota.getPlayersBirths().size() > 0 || dayInDota.getTournamentWinners().size() > 0)
+            sendMessageService.sendThisDayInDotaMessage(dayInDota);
+    }
 
     private List<GameinsideNewsPost> getNewPosts(List<GameinsideNewsPost> news) {
         Optional<GameinsideNewsPost> lastNewsPost = gameinsideNewsPostService.getLastNewsPost();
@@ -219,17 +226,17 @@ public class PosterService {
     }
 
     private void chooseTransferMessage(Transfer transfer) {
-        if(transfer.getOldTeam().equals("None") && Strings.isEmpty(transfer.getNewTeamPosition()))
+        if (transfer.getOldTeam().equals("None") && Strings.isEmpty(transfer.getNewTeamPosition()))
             sendMessageService.sendMessageTransferNoneToTeam(transfer);
-        else if(transfer.getOldTeam().equals("None") && transfer.getNewTeamPosition().equals("(Coach)"))
+        else if (transfer.getOldTeam().equals("None") && transfer.getNewTeamPosition().equals("(Coach)"))
             sendMessageService.sendMessageTransferNoneToTeamCoach(transfer);
         else if (transfer.getOldTeam().equals("Retired") && Strings.isEmpty(transfer.getNewTeamPosition()))
             sendMessageService.sendMessageTransferRetiredToTeam(transfer);
-        else if(transfer.getOldTeam().equals("Retired") && transfer.getNewTeamPosition().equals("(Coach)"))
+        else if (transfer.getOldTeam().equals("Retired") && transfer.getNewTeamPosition().equals("(Coach)"))
             sendMessageService.sendMessageTransferRetiredToTeamCoach(transfer);
-        else if(transfer.getNewTeam().equals("None"))
+        else if (transfer.getNewTeam().equals("None"))
             sendMessageService.sendMessageTransferFromTeamToNone(transfer);
-        else if(transfer.getNewTeamPosition().equals("(Inactive)"))
+        else if (transfer.getNewTeamPosition().equals("(Inactive)"))
             sendMessageService.sendMessageFromTeamToInactive(transfer);
         else
             sendMessageService.sendMessageServiceFromTeamToTeam(transfer);

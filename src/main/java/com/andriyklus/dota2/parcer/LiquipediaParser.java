@@ -3,6 +3,7 @@ package com.andriyklus.dota2.parcer;
 import com.andriyklus.dota2.domain.*;
 import com.andriyklus.dota2.service.db.TransferService;
 import com.andriyklus.dota2.service.db.UkrainianTeamService;
+import com.andriyklus.dota2.util.RussianFilter;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.jsoup.Jsoup;
@@ -30,12 +31,14 @@ public class LiquipediaParser {
     private static final String MATCHES_PAGE_URL = "https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches";
     private static final String MATCHES_STATS_URL = "https://liquipedia.net/dota2/Special:Stream/twitch/";
     private static final String TRANSFERS_PAGE_URL = "https://liquipedia.net/dota2/Portal:Transfers";
+    private static final String MAIN_PAGE_URL = "https://liquipedia.net/dota2/Main_Page";
+    private static final String LIQUIPEDIA_URL = "https://liquipedia.net";
 
     private final UkrainianTeamService teamService;
     private final TransferService transferService;
+    private final RussianFilter russianFilter;
 
     private final Logger logger = LoggerFactory.getLogger(LiquipediaParser.class);
-
 
     public List<Match> parseDayMatches() {
         Document matchesPage;
@@ -409,6 +412,102 @@ public class LiquipediaParser {
 
     private String parseNewsLink(Element element) {
         return element.getElementsByTag("a").get(0).attr("href");
+    }
+
+    public DayInDota parseDayInDota() {
+        Document dota2Page;
+        try {
+            dota2Page = Jsoup.parse(new URL(MAIN_PAGE_URL), 30000);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return parseDayInDota(dota2Page);
+    }
+
+    private DayInDota parseDayInDota(Document document) {
+        Element thisDayBox = document.getElementsByAttributeValue("id", "this-day-facts").get(0);
+        Map<Tournament, Team> tournamentWinners = new LinkedHashMap<>();
+        parseTournamentWinners(thisDayBox, tournamentWinners);
+        List<Player> players = parsePlayers(thisDayBox);
+        return DayInDota.builder()
+                .tournamentWinners(tournamentWinners)
+                .playersBirths(players)
+                .build();
+    }
+
+    private void parseTournamentWinners(Element thisDayBox, Map<Tournament, Team> tournamentWinners) {
+        try {
+            Elements yearBoxes = thisDayBox.getElementsByTag("h4");
+            for (int w = 0; w < yearBoxes.size(); w++) {
+                String year = thisDayBox.getElementsByTag("h4").get(w).text();
+                Element tournamentBox = thisDayBox.getElementsByTag("ul").get(w);
+                parseTournamentWinner(tournamentBox, year, tournamentWinners);
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void parseTournamentWinner(Element element, String year, Map<Tournament, Team> tournamentWinners) {
+        String tournamentName = element.getElementsByTag("a").get(1).text();
+        String tournamentLink = LIQUIPEDIA_URL + element.getElementsByTag("a").get(1).attr("href");
+        String teamName = element.getElementsByClass("team-template-text").get(0)
+                .getElementsByTag("a").get(0).text();
+        String teamLink = LIQUIPEDIA_URL + element.getElementsByClass("team-template-text").get(0)
+                .getElementsByTag("a").get(0).attr("href");
+
+        tournamentWinners.put(Tournament.builder()
+                        .name(tournamentName)
+                        .year(year)
+                        .link(tournamentLink)
+                        .build(),
+                Team.builder()
+                        .name(teamName)
+                        .link(teamLink)
+                        .build());
+    }
+
+    private List<Player> parsePlayers(Element thisDayBox) {
+        try {
+            Elements pBoxes = thisDayBox.getElementsByTag("p");
+            for (Element pBox : pBoxes) {
+                if (pBox.text().equals("There are no birthdays today"))
+                    return Collections.emptyList();
+            }
+        } catch (Exception ignored) {
+        }
+        int num = 0;
+        try {
+            num = thisDayBox.getElementsByTag("h4").size();
+        } catch (Exception ignored) {
+        }
+
+        return thisDayBox.getElementsByTag("ul").get(num)
+                .getElementsByTag("li").stream()
+                .map(this::parsePlayer)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private Player parsePlayer(Element liBox) {
+        String playerName = liBox.getElementsByClass("inline-player").get(0)
+                .getElementsByTag("a")
+                .get(0)
+                .text();
+        String playerLink = LIQUIPEDIA_URL + liBox.getElementsByClass("inline-player").get(0)
+                .getElementsByTag("a")
+                .get(0)
+                .attr("href");
+        String playerFlag = liBox.getElementsByTag("img").get(0).attr("alt");
+        if(!russianFilter.isNotRussianPlayer(playerFlag)) {
+            return null;
+        }
+        String yearOfBirth = liBox.text().substring(liBox.text().indexOf(" - ") + 3, liBox.text().indexOf(" ("));
+        return Player.builder()
+                .flag(getFlag(playerFlag))
+                .name(playerName)
+                .yearOfBirth(yearOfBirth)
+                .link(playerLink)
+                .build();
     }
 
 }

@@ -24,7 +24,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class PosterServiceTest {
 
-    @InjectMocks
+    /*@InjectMocks
     private PosterService posterService;
     @Mock
     private LiquipediaParser liquipediaParser;

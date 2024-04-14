@@ -31,6 +31,8 @@ public class SendMessageService {
         this.ukrainianTeamService = ukrainianTeamService;
     }
 
+    //posting GameInside news
+
     public void postGameInsideNews(GameinsideNewsPost gameinsideNewsPost) {
         var message = SendPhoto.builder()
                 .chatId(CHAT_ID)
@@ -60,20 +62,12 @@ public class SendMessageService {
                 gameinsideNewsPost.getTags();
     }
 
+    //posting today games
+
     public void postTodayGames(List<Match> matches) {
         var message = SendMessage.builder()
                 .chatId(CHAT_ID)
                 .text(formatMessageForTodayGames(matches))
-                .parseMode(ParseMode.HTML)
-                .build();
-
-        messageSender.sendMessage(message);
-    }
-
-    public void postStartedMatch(Match match) {
-        var message = SendMessage.builder()
-                .chatId(CHAT_ID)
-                .text(formatMessageForStartedMatch(match))
                 .parseMode(ParseMode.HTML)
                 .build();
 
@@ -111,6 +105,18 @@ public class SendMessageService {
         return currentDate.format(formatter);
     }
 
+    //post started matches
+
+    public void postStartedMatch(Match match) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatMessageForStartedMatch(match))
+                .parseMode(ParseMode.HTML)
+                .build();
+
+        messageSender.sendMessage(message);
+    }
+
     private String formatMessageForStartedMatch(Match match) {
         StringBuilder stringBuilder = new StringBuilder().append("⏰ Розпочинається матч: <b>")
                 .append(match.getTeamOne().getName())
@@ -134,6 +140,7 @@ public class SendMessageService {
         return stringBuilder.toString();
     }
 
+    //post game result
 
     public void postUkrainianTeamWonGame(Match match, Team team) {
         var message = SendMessage.builder()
@@ -225,6 +232,8 @@ public class SendMessageService {
                 "</b>";
     }
 
+    //post match result
+
     public void postUkrainianTeamWonMatch(Match match, Team team) {
         var message = SendMessage.builder()
                 .chatId(CHAT_ID)
@@ -312,6 +321,8 @@ public class SendMessageService {
                 "</b>";
     }
 
+    // post day results
+
     public void postDayResults(List<Match> matches) {
         var message = SendMessage.builder()
                 .chatId(CHAT_ID)
@@ -363,7 +374,7 @@ public class SendMessageService {
         }
     }
 
-
+    //post transfers
 
     public void sendMessageTransferNoneToTeam(Transfer transfer) {
         var message = SendMessage.builder()
@@ -568,6 +579,58 @@ public class SendMessageService {
                 transfer.getNewTeam() +
                 "\n" +
                 transfer.getNewsLink();
+    }
+
+    public void sendThisDayInDotaMessage(DayInDota dayInDota) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatThisDayInDotaMessage(dayInDota))
+                .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
+                .build();
+
+        messageSender.sendMessage(message);
+    }
+
+    private String formatThisDayInDotaMessage(DayInDota dayInDota) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("<b>Цього дня в Dota 2</b>\n");
+        if (dayInDota.getTournamentWinners().size() > 0) {
+            dayInDota.getTournamentWinners().forEach((key, value) -> stringBuilder.append("\n◻\uFE0F <b>")
+                    .append(key.getYear())
+                    .append("</b>\n\uD83C\uDFC6 <b><a href=\"")
+                    .append(value.getLink())
+                    .append("\">")
+                    .append(value.getName())
+                    .append("</a></b> виграли на <b><a href=\"")
+                    .append(key.getLink())
+                    .append("\">")
+                    .append(key.getName())
+                    .append("</a></b>\n"));
+        }
+
+        if(dayInDota.getPlayersBirths().size() > 0) {
+            stringBuilder.append("\n\uD83C\uDF88<b> Сьогодні день народження ")
+                    .append(dayInDota.getPlayersBirths().size() > 1 ? "святкують:</b>\n" : "святкує:</b>\n");
+            for (Player player : dayInDota.getPlayersBirths()) {
+                stringBuilder.append("\uD83D\uDD38 <a href=\"")
+                        .append(player.getLink())
+                        .append("\">")
+                        .append(player.getName())
+                        .append("</a> - ")
+                        .append(player.getYearOfBirth())
+                        .append(" (")
+                        .append(getAge(player.getYearOfBirth()))
+                        .append(")\n");
+            }
+        }
+
+        return stringBuilder.toString();
+    }
+
+    private String getAge(String year) {
+        LocalDate age = LocalDate.now().minusYears(Long.parseLong(year));
+        return String.valueOf(age.getYear());
     }
 
 }

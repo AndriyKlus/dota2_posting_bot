@@ -7,7 +7,9 @@ import lombok.Data;
 @Builder
 public class Player {
 
-    String name;
-    String flag;
+    private String name;
+    private String flag;
+    private String yearOfBirth;
+    private String link;
 
 }

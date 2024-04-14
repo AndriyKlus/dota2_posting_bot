@@ -16,4 +16,5 @@ public class Team {
     private String name;
     private int score;
     private List<String> players;
+    private String link;
 }

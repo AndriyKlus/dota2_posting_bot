@@ -9,5 +9,7 @@ public class Tournament {
 
     private String name;
     private String prizePool;
+    private String link;
+    private String year;
 
 }
