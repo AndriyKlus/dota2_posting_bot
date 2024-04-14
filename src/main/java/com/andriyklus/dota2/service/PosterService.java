@@ -1,17 +1,17 @@
 package com.andriyklus.dota2.service;
 
-import com.andriyklus.dota2.domain.Match;
-import com.andriyklus.dota2.domain.GameinsideNewsPost;
-import com.andriyklus.dota2.domain.Team;
-import com.andriyklus.dota2.domain.UkrainianTeam;
+import com.andriyklus.dota2.domain.*;
 import com.andriyklus.dota2.parcer.GameInsideParser;
 import com.andriyklus.dota2.parcer.LiquipediaParser;
 import com.andriyklus.dota2.service.db.GameinsideNewsPostService;
 import com.andriyklus.dota2.service.db.MatchService;
+import com.andriyklus.dota2.service.db.TransferService;
 import com.andriyklus.dota2.service.db.UkrainianTeamService;
 import com.andriyklus.dota2.telegram.service.SendMessageService;
+import com.andriyklus.dota2.util.RussianFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -32,6 +32,8 @@ public class PosterService {
     private final MatchService matchService;
     private final UkrainianTeamService teamService;
     private final GameInsideParser gameInsideParser;
+    private final RussianFilter russianFilter;
+    private final TransferService transferService;
 
     Logger logger = LoggerFactory.getLogger(PosterService.class);
 
@@ -95,6 +97,18 @@ public class PosterService {
             return;
 
         sendMessageService.postDayResults(matches);
+     }
+
+    @Scheduled(fixedRate = 15 * 60 * 1000)
+    private void postTransfers() {
+        List<Transfer> transfers = liquipediaParser.parseTransfers();
+        transfers.stream()
+                .filter(russianFilter::isNotRussianTeam)
+                .filter(russianFilter::isNotRussianPlayer)
+                .forEach(this::chooseTransferMessage);
+        if(transfers.size() > 0) {
+            transferService.saveLastTransfer(transfers.get(0));
+        }
      }
 
     private List<GameinsideNewsPost> getNewPosts(List<GameinsideNewsPost> news) {
@@ -202,6 +216,23 @@ public class PosterService {
             return 2;
         }
         return 0;
+    }
+
+    private void chooseTransferMessage(Transfer transfer) {
+        if(transfer.getOldTeam().equals("None") && Strings.isEmpty(transfer.getNewTeamPosition()))
+            sendMessageService.sendMessageTransferNoneToTeam(transfer);
+        else if(transfer.getOldTeam().equals("None") && transfer.getNewTeamPosition().equals("(Coach)"))
+            sendMessageService.sendMessageTransferNoneToTeamCoach(transfer);
+        else if (transfer.getOldTeam().equals("Retired") && Strings.isEmpty(transfer.getNewTeamPosition()))
+            sendMessageService.sendMessageTransferRetiredToTeam(transfer);
+        else if(transfer.getOldTeam().equals("Retired") && transfer.getNewTeamPosition().equals("(Coach)"))
+            sendMessageService.sendMessageTransferRetiredToTeamCoach(transfer);
+        else if(transfer.getNewTeam().equals("None"))
+            sendMessageService.sendMessageTransferFromTeamToNone(transfer);
+        else if(transfer.getNewTeamPosition().equals("(Inactive)"))
+            sendMessageService.sendMessageFromTeamToInactive(transfer);
+        else
+            sendMessageService.sendMessageServiceFromTeamToTeam(transfer);
     }
 
 

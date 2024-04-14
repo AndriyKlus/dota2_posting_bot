@@ -1,11 +1,10 @@
 package com.andriyklus.dota2.parcer;
 
-import com.andriyklus.dota2.domain.Match;
-import com.andriyklus.dota2.domain.Team;
-import com.andriyklus.dota2.domain.Tournament;
-import com.andriyklus.dota2.domain.UkrainianTeam;
+import com.andriyklus.dota2.domain.*;
+import com.andriyklus.dota2.service.db.TransferService;
 import com.andriyklus.dota2.service.db.UkrainianTeamService;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -22,14 +21,18 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.andriyklus.dota2.util.FlagConverterUtil.getFlag;
+
 @Service
 @RequiredArgsConstructor
 public class LiquipediaParser {
 
     private static final String MATCHES_PAGE_URL = "https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches";
     private static final String MATCHES_STATS_URL = "https://liquipedia.net/dota2/Special:Stream/twitch/";
+    private static final String TRANSFERS_PAGE_URL = "https://liquipedia.net/dota2/Portal:Transfers";
 
     private final UkrainianTeamService teamService;
+    private final TransferService transferService;
 
     private final Logger logger = LoggerFactory.getLogger(LiquipediaParser.class);
 
@@ -207,8 +210,24 @@ public class LiquipediaParser {
 
     private void parsePlayers(Document document, Match match) {
         Elements tables = document.getElementsByClass("wikitable");
-        match.getTeamOne().setPlayers(tables.get(0).getElementsByAttributeValue("id", "player").stream().map(Element::text).collect(Collectors.toList()));
-        match.getTeamTwo().setPlayers(tables.get(1).getElementsByAttributeValue("id", "player").stream().map(Element::text).collect(Collectors.toList()));
+        match.getTeamOne().setPlayers(tables.get(0).getElementsByAttributeValue("id", "player").stream()
+                .map(Element::text)
+                .map(player -> {
+                    if (player.contains("_(Ukrainian_player)"))
+                        return player.substring(0, player.length() - 19);
+                    else
+                        return player;
+                })
+                .collect(Collectors.toList()));
+        match.getTeamTwo().setPlayers(tables.get(1).getElementsByAttributeValue("id", "player").stream()
+                .map(Element::text)
+                .map(player -> {
+                    if (player.contains("_(Ukrainian_player)"))
+                        return player.substring(0, player.length() - 19);
+                    else
+                        return player;
+                })
+                .collect(Collectors.toList()));
     }
 
     public List<Match> parseEndedMatches() {
@@ -222,7 +241,7 @@ public class LiquipediaParser {
     }
 
     private List<Match> parseEndedMatches(Document matchesPage) {
-                Elements endedMatchesBoxes = matchesPage.getElementsByAttributeValue("data-toggle-area-content", "3")
+        Elements endedMatchesBoxes = matchesPage.getElementsByAttributeValue("data-toggle-area-content", "3")
                 .get(2)
                 .getElementsByTag("table");
 
@@ -271,6 +290,125 @@ public class LiquipediaParser {
                         .build())
                 .time(time)
                 .build();
+    }
+
+
+    public List<Transfer> parseTransfers() {
+        Document matchesPage;
+        try {
+            matchesPage = Jsoup.parse(new URL(TRANSFERS_PAGE_URL), 30000);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return parseTransfers(matchesPage);
+    }
+
+    private List<Transfer> parseTransfers(Document matchPage) {
+        Elements transferBoxes = matchPage.getElementsByClass("divRow");
+        List<Transfer> transfers = new ArrayList<>();
+        for (Element element : transferBoxes) {
+            Optional<Transfer> optionalTransfer = parseTransfer(element);
+            if (optionalTransfer.isPresent()) {
+                transfers.add(optionalTransfer.get());
+            } else {
+                break;
+            }
+        }
+        return transfers.stream()
+                .filter(transfer -> Strings.isNotEmpty(transfer.getOldTeam()))
+                .filter(transfer -> Objects.nonNull(transfer.getNewTeamPosition()))
+                .toList();
+    }
+
+    private Optional<Transfer> parseTransfer(Element element) {
+        String newsLink = parseNewsLink(element.getElementsByClass("Ref").get(0));
+        if (isOldPost(newsLink))
+            return Optional.empty();
+
+        List<Player> players = parseTransferPlayers(element.getElementsByClass("Name").get(0));
+        String oldTeam = parseOldTeam(element.getElementsByClass("OldTeam").get(0));
+        String newTeam = parseNewTeam(element.getElementsByClass("NewTeam").get(0));
+        String position = parseNewTeamPosition(element.getElementsByClass("NewTeam").get(0));
+        return Optional.of(Transfer.builder()
+                .players(players)
+                .oldTeam(oldTeam)
+                .newTeam(newTeam)
+                .newTeamPosition(position)
+                .newsLink(newsLink)
+                .build());
+    }
+
+    private boolean isOldPost(String newsLink) {
+        if (transferService.getLastTransfer().isEmpty())
+            return false;
+        return transferService.getLastTransfer().get().getNewsLink().equals(newsLink);
+    }
+
+    private List<Player> parseTransferPlayers(Element element) {
+        List<Player> players = new ArrayList<>();
+        Elements playersTags = element.getElementsByTag("a");
+        for (int w = 0; w < playersTags.size(); w = w + 2) {
+            players.add(Player.builder()
+                    .flag(getFlag(playersTags.get(w).attr("title")))
+                    .name(playersTags.get(w + 1).text())
+                    .build());
+        }
+        return players;
+    }
+
+    private String parseOldTeam(Element element) {
+        try {
+            String value = element.getElementsByTag("span").get(0).text();
+            if (value.equals("None"))
+                return "None";
+            if (value.equals("Retired"))
+                return "Retired";
+        } catch (Exception ignored) {
+        }
+
+        if (element.getElementsByClass("team-template-team-icon").size() > 1)
+            return "";
+
+        try {
+            String value = element.getElementsByTag("span").get(element.getElementsByTag("span").size() - 1).text();
+            if (value.equals("(Inactive)") || value.equals("(Coach)") || value.equals("(Manager)"))
+                return "";
+        } catch (Exception ignored) {
+        }
+
+        return element.getElementsByClass("team-template-team-icon")
+                .get(0)
+                .attr("data-highlightingclass");
+    }
+
+    private String parseNewTeam(Element element) {
+        try {
+            String value = element.getElementsByTag("span").get(0).text();
+            if (value.equals("None"))
+                return "None";
+            if (value.equals("Retired"))
+                return "Retired";
+        } catch (Exception ignored) {
+        }
+        return element.getElementsByClass("team-template-team-icon")
+                .get(0)
+                .attr("data-highlightingclass");
+    }
+
+    private String parseNewTeamPosition(Element element) {
+        try {
+            String value = element.getElementsByTag("span").get(element.getElementsByTag("span").size() - 1).text();
+            if (value.equals("(Inactive)") || value.equals("(Coach)"))
+                return value;
+            if (value.equals("(Analyst)") || value.equals("(Manager)"))
+                return null;
+        } catch (Exception ignored) {
+        }
+        return "";
+    }
+
+    private String parseNewsLink(Element element) {
+        return element.getElementsByTag("a").get(0).attr("href");
     }
 
 }

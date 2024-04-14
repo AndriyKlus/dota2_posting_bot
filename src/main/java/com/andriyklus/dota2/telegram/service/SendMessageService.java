@@ -1,10 +1,7 @@
 package com.andriyklus.dota2.telegram.service;
 
 
-import com.andriyklus.dota2.domain.Match;
-import com.andriyklus.dota2.domain.GameinsideNewsPost;
-import com.andriyklus.dota2.domain.Team;
-import com.andriyklus.dota2.domain.UkrainianTeam;
+import com.andriyklus.dota2.domain.*;
 import com.andriyklus.dota2.service.db.UkrainianTeamService;
 import com.andriyklus.dota2.telegram.messagesender.MessageSender;
 import org.springframework.stereotype.Service;
@@ -26,7 +23,7 @@ public class SendMessageService {
     private final Long CHAT_ID = /*358029493L;*/ -1002029412738L;
 
     private final MessageSender messageSender;
-    private UkrainianTeamService ukrainianTeamService;
+    private final UkrainianTeamService ukrainianTeamService;
 
 
     public SendMessageService(MessageSender messageSender, UkrainianTeamService ukrainianTeamService) {
@@ -364,6 +361,213 @@ public class SendMessageService {
                 return "\uD83D\uDFE2";
             return "\uD83D\uDD34";
         }
+    }
+
+
+
+    public void sendMessageTransferNoneToTeam(Transfer transfer) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatMessageTransferNoneToTeam(transfer))
+                .parseMode(ParseMode.HTML)
+                .build();
+
+        messageSender.sendMessage(message);
+    }
+
+    public void sendMessageTransferNoneToTeamCoach(Transfer transfer) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatMessageTransferNoneToTeamCoach(transfer))
+                .parseMode(ParseMode.HTML)
+                .build();
+
+        messageSender.sendMessage(message);
+    }
+
+    public void sendMessageTransferFromTeamToNone(Transfer transfer) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatMessageTransferFromTeamToNone(transfer))
+                .parseMode(ParseMode.HTML)
+                .build();
+
+        messageSender.sendMessage(message);
+    }
+
+    public void sendMessageTransferRetiredToTeam(Transfer transfer) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatMessageTransferRetiredToTeam(transfer))
+                .parseMode(ParseMode.HTML)
+                .build();
+
+        messageSender.sendMessage(message);
+    }
+
+    public void sendMessageTransferRetiredToTeamCoach(Transfer transfer) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatMessageTransferRetiredToTeamCoach(transfer))
+                .parseMode(ParseMode.HTML)
+                .build();
+
+        messageSender.sendMessage(message);
+    }
+
+    public void sendMessageFromTeamToInactive(Transfer transfer) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatMessageFromTeamToInactive(transfer))
+                .parseMode(ParseMode.HTML)
+                .build();
+
+        messageSender.sendMessage(message);
+    }
+
+    public void sendMessageServiceFromTeamToTeam(Transfer transfer) {
+        var message = SendMessage.builder()
+                .chatId(CHAT_ID)
+                .text(formatMessageServiceFromTeamToTeam(transfer))
+                .parseMode(ParseMode.HTML)
+                .build();
+
+        messageSender.sendMessage(message);
+    }
+
+    private String formatMessageTransferNoneToTeam(Transfer transfer) {
+        if (transfer.getPlayers().size() == 1) {
+            return transfer.getPlayers().get(0).getFlag() +
+                    "<b>" +
+                    transfer.getPlayers().get(0).getName() +
+                    "</b> приєднався до " +
+                    transfer.getNewTeam() +
+                    "\n" +
+                    transfer.getNewsLink();
+        } else {
+            StringBuilder s = new StringBuilder(transfer.getPlayers().get(0).getFlag() +
+                    "<b>" + transfer.getPlayers().get(0).getName() + "</b>");
+            for (int w = 1; w < transfer.getPlayers().size() - 1; w++) {
+                s.append(", ")
+                        .append(transfer.getPlayers().get(w).getFlag())
+                        .append("<b>")
+                        .append(transfer.getPlayers().get(w).getName())
+                        .append("</b>");
+            }
+            s.append(" та ")
+                    .append(transfer.getPlayers().get(transfer.getPlayers().size() - 1).getFlag())
+                    .append("<b>")
+                    .append(transfer.getPlayers().get(transfer.getPlayers().size() - 1).getName())
+                    .append("</b>");
+            s.append(" приєднались до ")
+                    .append(transfer.getNewTeam())
+                    .append("\n")
+                    .append(transfer.getNewsLink());
+            return s.toString();
+        }
+    }
+
+    private String formatMessageTransferNoneToTeamCoach(Transfer transfer) {
+        return transfer.getPlayers().get(0).getFlag() +
+                "<b>" +
+                transfer.getPlayers().get(0).getName() +
+                "</b> приєднався до " +
+                transfer.getNewTeam() +
+                " на позицію тренера\n" +
+                transfer.getNewsLink();
+    }
+
+    private String formatMessageTransferFromTeamToNone(Transfer transfer) {
+        if (transfer.getPlayers().size() == 1) {
+            return transfer.getPlayers().get(0).getFlag() +
+                    "<b>" +
+                    transfer.getPlayers().get(0).getName() +
+                    "</b> покинув склад " +
+                    transfer.getOldTeam() +
+                    "\n" +
+                    transfer.getNewsLink();
+        } else {
+            StringBuilder s = new StringBuilder(transfer.getPlayers().get(0).getFlag() +
+                    "<b>" + transfer.getPlayers().get(0).getName() + "</b>");
+            for (int w = 0; w < transfer.getPlayers().size() - 1; w++) {
+                s.append(", ")
+                        .append(transfer.getPlayers().get(w).getFlag())
+                        .append("<b>")
+                        .append(transfer.getPlayers().get(w).getName())
+                        .append("</b>");
+            }
+            s.append(" та ")
+                    .append(transfer.getPlayers().get(transfer.getPlayers().size() - 1).getFlag())
+                    .append("<b>")
+                    .append(transfer.getPlayers().get(transfer.getPlayers().size() - 1).getName())
+                    .append("</b>");
+            s.append(" покинули склад ")
+                    .append(transfer.getOldTeam())
+                    .append("\n")
+                    .append(transfer.getNewsLink());
+            return s.toString();
+        }
+    }
+
+    private String formatMessageTransferRetiredToTeam(Transfer transfer) {
+        return transfer.getPlayers().get(0).getFlag() +
+                "<b>" +
+                transfer.getPlayers().get(0).getName() +
+                "</b> повернувся на професійну сцену та приєднався до " +
+                transfer.getNewTeam() +
+                "\n" +
+                transfer.getNewsLink();
+    }
+
+    private String formatMessageTransferRetiredToTeamCoach(Transfer transfer) {
+        return transfer.getPlayers().get(0).getFlag() +
+                "<b>" +
+                transfer.getPlayers().get(0).getName() +
+                "</b> повернувся на професійну сцену та приєднався до " +
+                transfer.getNewTeam() +
+                " на позицію тренера\n" +
+                transfer.getNewsLink();
+    }
+
+    private String formatMessageFromTeamToInactive(Transfer transfer) {
+        if (transfer.getPlayers().size() == 1) {
+            return transfer.getOldTeam() +
+                    " перевели " +
+                    transfer.getPlayers().get(0).getFlag() +
+                    "<b>" +
+                    transfer.getPlayers().get(0).getName() +
+                    "</b> на лаву запасних\n" +
+                    transfer.getNewsLink();
+        } else {
+            StringBuilder s = new StringBuilder(transfer.getOldTeam() + " перевели ");
+            for (int w = 1; w < transfer.getPlayers().size() - 1; w++) {
+                s.append(", ")
+                        .append(transfer.getPlayers().get(w).getFlag())
+                        .append("<b>")
+                        .append(transfer.getPlayers().get(w).getName())
+                        .append("</b>");
+            }
+            s.append(" та ")
+                    .append(transfer.getPlayers().get(transfer.getPlayers().size() - 1).getFlag())
+                    .append("<b>")
+                    .append(transfer.getPlayers().get(transfer.getPlayers().size() - 1).getName())
+                    .append("</b>");
+            s.append(" на лаву запасних\n ")
+                    .append(transfer.getNewsLink());
+            return s.toString();
+        }
+    }
+
+    private String formatMessageServiceFromTeamToTeam(Transfer transfer) {
+        return transfer.getPlayers().get(0).getFlag() +
+                "<b>" +
+                transfer.getPlayers().get(0).getName() +
+                "</b> перейшов з " +
+                transfer.getOldTeam() +
+                " до " +
+                transfer.getNewTeam() +
+                "\n" +
+                transfer.getNewsLink();
     }
 
 }
