@@ -274,7 +274,7 @@ public class SendMessageService {
     }
 
     private String formatMessageUkrTeamWonMatch(Match match, Team team) {
-        return "<b>" +
+        return "\uD83D\uDFE2 <b>" +
                 team.getName() +
                 "</b>" +
                 " перемогли <b>" +
@@ -295,7 +295,7 @@ public class SendMessageService {
     }
 
     private String formatMessageUkrTeamLostMatch(Match match, Team team) {
-        return "На жаль, <b>" +
+        return "\uD83D\uDD34 <b>" +
                 (match.getTeamOne().getName().equals(team.getName()) ? match.getTeamTwo().getName() : match.getTeamOne().getName()) +
                 "</b>" +
                 " програли <b>" +
@@ -316,7 +316,7 @@ public class SendMessageService {
     }
 
     private String formatMessageUkrTeamsMatch(Match match) {
-        return "<b>" +
+        return "\uD83D\uDFE0 <b>" +
                 match.getTeamOne().getName() +
                 "</b>" +
                 " перемогли <b>" +
