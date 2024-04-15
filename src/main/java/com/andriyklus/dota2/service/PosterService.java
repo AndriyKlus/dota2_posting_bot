@@ -89,7 +89,7 @@ public class PosterService {
         matchesToPost.forEach(this::chooseTypeOfMessageForMatchEnd);
     }
 
-    @Scheduled(cron = "0 0 21 * * *")
+    @Scheduled(cron = "0 45 20 * * *")
     private void postDayResults() {
         List<Match> matches = liquipediaParser.parseEndedMatches();
         Collections.reverse(matches);
