@@ -69,6 +69,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatMessageForTodayGames(matches))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -88,9 +89,11 @@ public class SendMessageService {
                     .append("</b> (Bo")
                     .append(match.getFormat())
                     .append(")\n")
-                    .append("\uD83C\uDFC6 Турнір: <b>")
+                    .append("\uD83C\uDFC6 Турнір: <b><a href=\"")
+                    .append(match.getTournament().getLink())
+                    .append("\">")
                     .append(match.getTournament().getName())
-                    .append("</b>\n")
+                    .append("</a></b>\n")
                     .append("⏰ Початок: ")
                     .append(match.getTime())
                     .append("\n\n");
@@ -112,6 +115,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatMessageForStartedMatch(match))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -124,9 +128,11 @@ public class SendMessageService {
                 .append(match.getTeamTwo().getName())
                 .append("</b> (Bo")
                 .append(match.getFormat())
-                .append(")\n\uD83C\uDFC6 Турнір: <b>")
+                .append(")\n\uD83C\uDFC6 Турнір: <b><a href=\"")
+                .append(match.getTournament().getLink())
+                .append("\">")
                 .append(match.getTournament().getName())
-                .append("</b>\n");
+                .append("</a></b>\n");
         if (Objects.nonNull(match.getTeamOne().getPlayers()) && Objects.nonNull(match.getTeamTwo().getPlayers())) {
             stringBuilder.append("\uD83D\uDC65 Склади команд\n<b>")
                     .append(match.getTeamOne().getName())
@@ -174,7 +180,7 @@ public class SendMessageService {
 
     private String formatMessageUkrTeamWonGame(Match match, Team team) {
         int gameNumber = match.getTeamOne().getScore() + match.getTeamTwo().getScore();
-        return "<b>" +
+        return "\uD83D\uDFE9 <b>" +
                 team.getName() +
                 "</b>" +
                 " перемогли <b>" +
@@ -194,7 +200,7 @@ public class SendMessageService {
 
     private String formatMessageUkrTeamLostGame(Match match, Team team) {
         int gameNumber = match.getTeamOne().getScore() + match.getTeamTwo().getScore();
-        return "<b>" +
+        return "\uD83D\uDFE5 <b>" +
                 (match.getTeamOne().getName().equals(team.getName()) ? match.getTeamTwo().getName() : match.getTeamOne().getName()) +
                 "</b>" +
                 " програли <b>" +
@@ -214,7 +220,7 @@ public class SendMessageService {
 
     private String formatMessageTwoUkrTeamsGame(Match match, Team team) {
         int gameNumber = match.getTeamOne().getScore() + match.getTeamTwo().getScore();
-        return "<b>" +
+        return "\uD83D\uDFE7 <b>" +
                 team.getName() +
                 "</b>" +
                 " перемогли <b>" +
@@ -239,6 +245,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatMessageUkrTeamWonMatch(match, team))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -249,6 +256,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatMessageUkrTeamLostMatch(match, team))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -259,6 +267,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatMessageUkrTeamsMatch(match))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -270,9 +279,11 @@ public class SendMessageService {
                 "</b>" +
                 " перемогли <b>" +
                 (match.getTeamOne().getName().equals(team.getName()) ? match.getTeamTwo().getName() : match.getTeamOne().getName()) +
-                "</b> на " +
+                "</b> на <a href=\"" +
+                match.getTournament().getLink() +
+                "\">" +
                 match.getTournament().getName() +
-                "\n\n<b>" +
+                "</a>\n\n<b>" +
                 match.getTeamOne().getName() +
                 " " +
                 match.getTeamOne().getScore() +
@@ -284,14 +295,16 @@ public class SendMessageService {
     }
 
     private String formatMessageUkrTeamLostMatch(Match match, Team team) {
-        return "На жаль <b>" +
+        return "На жаль, <b>" +
                 (match.getTeamOne().getName().equals(team.getName()) ? match.getTeamTwo().getName() : match.getTeamOne().getName()) +
                 "</b>" +
                 " програли <b>" +
                 team.getName() +
-                "</b> на " +
+                "</b> на <a href=\"" +
+                match.getTournament().getLink() +
+                "\">" +
                 match.getTournament().getName() +
-                "\n\n<b>" +
+                "</a>\n\n<b>" +
                 match.getTeamOne().getName() +
                 " " +
                 match.getTeamOne().getScore() +
@@ -308,9 +321,11 @@ public class SendMessageService {
                 "</b>" +
                 " перемогли <b>" +
                 match.getTeamTwo().getName() +
-                "</b> на " +
+                "</b> на <a href=\"" +
+                match.getTournament().getLink() +
+                "\">" +
                 match.getTournament().getName() +
-                "\n\n<b>" +
+                "</a>\n\n<b>" +
                 match.getTeamOne().getName() +
                 " " +
                 match.getTeamOne().getScore() +
@@ -328,6 +343,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatDayResults(matches))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -352,8 +368,11 @@ public class SendMessageService {
                 " " +
                 match.getTeamTwo().getName() +
                 "</b> " +
-                "на " +
-                match.getTournament().getName();
+                "на <a href=\"" +
+                match.getTournament().getLink() +
+                "\">" +
+                match.getTournament().getName() +
+                "</a>";
     }
 
     private String matchResultEmoji(Match match) {

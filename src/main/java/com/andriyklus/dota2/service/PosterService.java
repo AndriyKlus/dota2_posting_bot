@@ -99,7 +99,7 @@ public class PosterService {
         sendMessageService.postDayResults(matches);
     }
 
-    //@Scheduled(fixedRate = 30 * 60 * 1000)
+    @Scheduled(fixedRate = 60 * 60 * 1000)
     private void postTransfers() {
         List<Transfer> transfers = liquipediaParser.parseTransfers();
         transfers.stream()
@@ -111,7 +111,7 @@ public class PosterService {
         }
     }
 
-    @Scheduled(cron = "0 0 7 * * *")
+    @Scheduled(cron = "0 30 6 * * *")
     private void postDayInDota() {
         DayInDota dayInDota = liquipediaParser.parseDayInDota();
         if (dayInDota.getPlayersBirths().size() > 0 || dayInDota.getTournamentWinners().size() > 0)

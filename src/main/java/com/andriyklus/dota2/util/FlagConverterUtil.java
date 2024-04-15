@@ -42,6 +42,7 @@ public class FlagConverterUtil {
         countryFlag.put("Ukraine", "\uD83C\uDDFA\uD83C\uDDE6");
         countryFlag.put("Argentina", "\uD83C\uDDE6\uD83C\uDDF7");
         countryFlag.put("Belarus", "\uD83C\uDDE7\uD83C\uDDFE");
+        countryFlag.put("Egypt", "\uD83C\uDDEA\uD83C\uDDEC");
     }
 
     public static String getFlag(String country) {

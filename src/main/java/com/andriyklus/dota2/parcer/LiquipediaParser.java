@@ -70,8 +70,8 @@ public class LiquipediaParser {
 
         if (filterStartedMatch(matchBox))
             return Optional.empty();
-        String teamOneName = matchBox.getElementsByClass("team-left").get(0).text();
-        String teamTwoName = matchBox.getElementsByClass("team-right").get(0).text();
+        String teamOneName = formatTeamName(matchBox.getElementsByClass("team-left").get(0).attr("title"));
+        String teamTwoName = formatTeamName(matchBox.getElementsByClass("team-right").get(0).attr("title"));
         int matchFormat;
         try {
             matchFormat = Integer.parseInt(matchBox.getElementsByClass("versus-lower").get(0).text().substring(3, 4));
@@ -81,7 +81,8 @@ public class LiquipediaParser {
         if (filterUncertainMatches(teamOneName, teamTwoName) || filterUkrainianTeams(teamOneName, teamTwoName))
             return Optional.empty();
 
-        String tournament = matchBox.getElementsByClass("tournament-text").get(0).text();
+        Tournament tournament = parseTournament(matchBox);
+
         String time;
         try {
             time = formatTime(matchBox.getElementsByClass("timer-object-countdown-only").get(0).text()).orElseThrow();
@@ -97,10 +98,16 @@ public class LiquipediaParser {
                 .teamTwo(Team.builder()
                         .name(teamTwoName)
                         .build())
-                .tournament(Tournament.builder().name(tournament).build())
+                .tournament(tournament)
                 .time(time)
                 .format(matchFormat)
                 .build());
+    }
+
+    private String formatTeamName(String teamName) {
+        if (teamName.contains("(page does not exist)"))
+            return teamName.substring(0, teamName.indexOf("(page does not exist)"));
+        return teamName;
     }
 
     private boolean filterStartedMatch(Element matchBox) {
@@ -159,8 +166,8 @@ public class LiquipediaParser {
 
     private Optional<Match> parseStartedMatch(Element matchBox) {
 
-        String teamOneName = matchBox.getElementsByClass("team-left").get(0).text();
-        String teamTwoName = matchBox.getElementsByClass("team-right").get(0).text();
+        String teamOneName = formatTeamName(matchBox.getElementsByClass("team-left").get(0).attr("title"));
+        String teamTwoName = formatTeamName(matchBox.getElementsByClass("team-left").get(0).attr("title"));
         int matchFormat;
         try {
             matchFormat = Integer.parseInt(matchBox.getElementsByClass("versus-lower").get(0).text().substring(3, 4));
@@ -177,7 +184,7 @@ public class LiquipediaParser {
         if (filterUncertainMatches(teamOneName, teamTwoName) || filterUkrainianTeams(teamOneName, teamTwoName))
             return Optional.empty();
 
-        String tournament = matchBox.getElementsByClass("tournament-text").get(0).text();
+        Tournament tournament = parseTournament(matchBox);
 
         Match match = Match.builder()
                 .teamOne(Team.builder()
@@ -188,7 +195,7 @@ public class LiquipediaParser {
                         .name(teamTwoName)
                         .score(secondTeamScore)
                         .build())
-                .tournament(Tournament.builder().name(tournament).build())
+                .tournament(tournament)
                 .format(matchFormat)
                 .build();
         try {
@@ -199,6 +206,15 @@ public class LiquipediaParser {
             logger.error("Cannot parse players of teams");
         }
         return Optional.of(match);
+    }
+
+    private Tournament parseTournament(Element matchBox) {
+        String tournament = matchBox.getElementsByClass("tournament-text").get(0).text();
+        String tournamentLink = matchBox.getElementsByClass("tournament-text").get(0).attr("href");
+        return Tournament.builder()
+                .name(tournament)
+                .link(LIQUIPEDIA_URL + tournamentLink)
+                .build();
     }
 
     private void parseMatchStats(String twitchChannel, Match match) {
@@ -255,8 +271,8 @@ public class LiquipediaParser {
     }
 
     private Match parseEndedMatch(Element endedMatchBox) {
-        String firstTeamName = endedMatchBox.getElementsByClass("team-left").text();
-        String secondTeamName = endedMatchBox.getElementsByClass("team-right").text();
+        String firstTeamName = formatTeamName(endedMatchBox.getElementsByClass("team-left").get(0).attr("title"));
+        String secondTeamName = formatTeamName(endedMatchBox.getElementsByClass("team-left").get(0).attr("title"));
 
         if (filterUkrainianTeams(firstTeamName, secondTeamName))
             return null;
@@ -271,7 +287,7 @@ public class LiquipediaParser {
             //logger.error("One of the team forfeited");
             return null;
         }
-        String tournamentName = endedMatchBox.getElementsByClass("tournament-text").text();
+        Tournament tournament = parseTournament(endedMatchBox);
         String time;
         try {
             time = formatTime(endedMatchBox.getElementsByClass("match-countdown").get(0).text()).orElseThrow();
@@ -288,9 +304,7 @@ public class LiquipediaParser {
                         .name(secondTeamName)
                         .score(secondTeamScore)
                         .build())
-                .tournament(Tournament.builder()
-                        .name(tournamentName)
-                        .build())
+                .tournament(tournament)
                 .time(time)
                 .build();
     }
@@ -498,7 +512,7 @@ public class LiquipediaParser {
                 .get(0)
                 .attr("href");
         String playerFlag = liBox.getElementsByTag("img").get(0).attr("alt");
-        if(!russianFilter.isNotRussianPlayer(playerFlag)) {
+        if (!russianFilter.isNotRussianPlayer(playerFlag)) {
             return null;
         }
         String yearOfBirth = liBox.text().substring(liBox.text().indexOf(" - ") + 3, liBox.text().indexOf(" ("));
