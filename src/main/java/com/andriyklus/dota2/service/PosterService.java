@@ -99,7 +99,7 @@ public class PosterService {
         sendMessageService.postDayResults(matches);
     }
 
-    @Scheduled(fixedRate = 30 * 60 * 1000)
+    //@Scheduled(fixedRate = 30 * 60 * 1000)
     private void postTransfers() {
         List<Transfer> transfers = liquipediaParser.parseTransfers();
         transfers.stream()
