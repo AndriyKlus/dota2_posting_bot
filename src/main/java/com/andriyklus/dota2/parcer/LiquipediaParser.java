@@ -222,7 +222,9 @@ public class LiquipediaParser {
 
     private Tournament parseTournament(Element matchBox) {
         String tournament = matchBox.getElementsByClass("tournament-text").get(0).text();
-        String tournamentLink = matchBox.getElementsByClass("tournament-text").get(0).attr("href");
+        String tournamentLink = matchBox.getElementsByClass("tournament-text").get(0)
+                .getElementsByTag("a").get(0)
+                .attr("href");
         return Tournament.builder()
                 .name(tournament)
                 .link(LIQUIPEDIA_URL + tournamentLink)
