@@ -131,7 +131,7 @@ public class LiquipediaParser {
         LocalDateTime parseDateTime = LocalDateTime.parse(dateTimeString, formatter);
         LocalDateTime currentDateTime = LocalDateTime.now();
 
-        if (currentDateTime.getDayOfMonth()-1 != parseDateTime.getDayOfMonth())
+        if (currentDateTime.getDayOfMonth() != parseDateTime.getDayOfMonth())
             return Optional.empty();
 
         LocalTime resultTime = parseDateTime.toLocalTime().plusHours(1);
