@@ -69,11 +69,16 @@ public class LiquipediaParser {
     private Optional<Match> parseUpcomingMatch(Element matchBox) {
         if (filterStartedMatch(matchBox))
             return Optional.empty();
-
-        String firstTeamName = formatTeamName(matchBox.getElementsByClass("team-left").get(0)
-                .getElementsByTag("a").get(0).attr("title"));
-        String secondTeamName = formatTeamName(matchBox.getElementsByClass("team-right").get(0)
-                .getElementsByTag("a").get(0).attr("title"));
+        String firstTeamName;
+        String secondTeamName;
+        try {
+            firstTeamName = formatTeamName(matchBox.getElementsByClass("team-left").get(0)
+                    .getElementsByTag("a").get(0).attr("title"));
+            secondTeamName = formatTeamName(matchBox.getElementsByClass("team-right").get(0)
+                    .getElementsByTag("a").get(0).attr("title"));
+        } catch (Exception ignored) {
+            return Optional.empty();
+        }
 
         int matchFormat;
         try {
@@ -81,7 +86,7 @@ public class LiquipediaParser {
         } catch (NumberFormatException e) {
             return Optional.empty();
         }
-        if (filterUncertainMatches(firstTeamName, secondTeamName) || filterUkrainianTeams(firstTeamName, secondTeamName))
+        if (filterUkrainianTeams(firstTeamName, secondTeamName))
             return Optional.empty();
 
         Tournament tournament = parseTournament(matchBox);
@@ -115,10 +120,6 @@ public class LiquipediaParser {
 
     private boolean filterStartedMatch(Element matchBox) {
         return !matchBox.getElementsByClass("versus").get(0).text().contains("vs");
-    }
-
-    private boolean filterUncertainMatches(String teamOneName, String teamTwoName) {
-        return teamOneName.equals("TBD") || teamTwoName.equals("TBD");
     }
 
     private boolean filterUkrainianTeams(String teamOneName, String teamTwoName) {
@@ -168,10 +169,16 @@ public class LiquipediaParser {
     }
 
     private Optional<Match> parseStartedMatch(Element matchBox) {
-        String firstTeamName = formatTeamName(matchBox.getElementsByClass("team-left").get(0)
-                .getElementsByTag("a").get(0).attr("title"));
-        String secondTeamName = formatTeamName(matchBox.getElementsByClass("team-right").get(0)
-                .getElementsByTag("a").get(0).attr("title"));
+        String firstTeamName;
+        String secondTeamName;
+        try {
+            firstTeamName = formatTeamName(matchBox.getElementsByClass("team-left").get(0)
+                    .getElementsByTag("a").get(0).attr("title"));
+            secondTeamName = formatTeamName(matchBox.getElementsByClass("team-right").get(0)
+                    .getElementsByTag("a").get(0).attr("title"));
+        } catch (Exception ignored) {
+            return Optional.empty();
+        }
 
         int matchFormat;
         try {
@@ -186,7 +193,7 @@ public class LiquipediaParser {
                 .getElementsByTag("div").get(0)
                 .getElementsByTag("div").get(0).text().substring(2, 3));
 
-        if (filterUncertainMatches(firstTeamName, secondTeamName) || filterUkrainianTeams(firstTeamName, secondTeamName))
+        if (filterUkrainianTeams(firstTeamName, secondTeamName))
             return Optional.empty();
 
         Tournament tournament = parseTournament(matchBox);
