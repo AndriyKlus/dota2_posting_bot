@@ -95,8 +95,16 @@ public class PosterService {
         Collections.reverse(matches);
         if (matches.size() == 0)
             return;
-
-        sendMessageService.postDayResults(matches);
+        while (true) {
+            if (matchService.getStartedMatches().size() == 0) {
+                sendMessageService.postDayResults(matches);
+                return;
+            }
+            try {
+                Thread.sleep(200000);
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     @Scheduled(fixedRate = 60 * 60 * 1000)
