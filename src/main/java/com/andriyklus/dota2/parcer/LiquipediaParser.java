@@ -476,7 +476,9 @@ public class LiquipediaParser {
     }
 
     private void parseTournamentWinner(Element element, String year, Map<Tournament, Team> tournamentWinners) {
-        String tournamentName = element.getElementsByTag("a").get(1).text();
+        String tournamentName = element.getElementsByTag("a").get(0).text();
+        if(Strings.isEmpty(tournamentName))
+            tournamentName = element.getElementsByTag("a").get(1).text();
         String tournamentLink = LIQUIPEDIA_URL + element.getElementsByTag("a").get(1).attr("href");
         String teamName = element.getElementsByClass("team-template-text").get(0)
                 .getElementsByTag("a").get(0).text();
