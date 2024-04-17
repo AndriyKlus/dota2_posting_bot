@@ -470,9 +470,9 @@ public class SendMessageService {
             return transfer.getPlayers().get(0).getFlag() +
                     "<b>" +
                     transfer.getPlayers().get(0).getName() +
-                    "</b> приєднався до " +
+                    "</b> приєднався до <b>" +
                     transfer.getNewTeam() +
-                    "\n" +
+                    "</b>\n" +
                     transfer.getNewsLink();
         } else {
             StringBuilder s = new StringBuilder(transfer.getPlayers().get(0).getFlag() +
@@ -489,9 +489,9 @@ public class SendMessageService {
                     .append("<b>")
                     .append(transfer.getPlayers().get(transfer.getPlayers().size() - 1).getName())
                     .append("</b>");
-            s.append(" приєднались до ")
+            s.append(" приєднались до <b>")
                     .append(transfer.getNewTeam())
-                    .append("\n")
+                    .append("</b>\n")
                     .append(transfer.getNewsLink());
             return s.toString();
         }
@@ -501,9 +501,9 @@ public class SendMessageService {
         return transfer.getPlayers().get(0).getFlag() +
                 "<b>" +
                 transfer.getPlayers().get(0).getName() +
-                "</b> приєднався до " +
+                "</b> приєднався до <b>" +
                 transfer.getNewTeam() +
-                " на позицію тренера\n" +
+                "</b> на позицію тренера\n" +
                 transfer.getNewsLink();
     }
 
@@ -512,9 +512,9 @@ public class SendMessageService {
             return transfer.getPlayers().get(0).getFlag() +
                     "<b>" +
                     transfer.getPlayers().get(0).getName() +
-                    "</b> покинув склад " +
+                    "</b> покинув склад <b>" +
                     transfer.getOldTeam() +
-                    "\n" +
+                    "</b>\n" +
                     transfer.getNewsLink();
         } else {
             StringBuilder s = new StringBuilder(transfer.getPlayers().get(0).getFlag() +
@@ -531,9 +531,9 @@ public class SendMessageService {
                     .append("<b>")
                     .append(transfer.getPlayers().get(transfer.getPlayers().size() - 1).getName())
                     .append("</b>");
-            s.append(" покинули склад ")
+            s.append(" покинули склад <b>")
                     .append(transfer.getOldTeam())
-                    .append("\n")
+                    .append("</b>\n")
                     .append(transfer.getNewsLink());
             return s.toString();
         }
@@ -543,9 +543,9 @@ public class SendMessageService {
         return transfer.getPlayers().get(0).getFlag() +
                 "<b>" +
                 transfer.getPlayers().get(0).getName() +
-                "</b> повернувся на професійну сцену та приєднався до " +
+                "</b> повернувся на професійну сцену та приєднався до <b>" +
                 transfer.getNewTeam() +
-                "\n" +
+                "</b>\n" +
                 transfer.getNewsLink();
     }
 
@@ -553,23 +553,23 @@ public class SendMessageService {
         return transfer.getPlayers().get(0).getFlag() +
                 "<b>" +
                 transfer.getPlayers().get(0).getName() +
-                "</b> повернувся на професійну сцену та приєднався до " +
+                "</b> повернувся на професійну сцену та приєднався до <b>" +
                 transfer.getNewTeam() +
-                " на позицію тренера\n" +
+                "</b> на позицію тренера\n" +
                 transfer.getNewsLink();
     }
 
     private String formatMessageFromTeamToInactive(Transfer transfer) {
         if (transfer.getPlayers().size() == 1) {
-            return transfer.getOldTeam() +
-                    " перевели " +
+            return "<b>" + transfer.getOldTeam() +
+                    "</b> перевели " +
                     transfer.getPlayers().get(0).getFlag() +
                     "<b>" +
                     transfer.getPlayers().get(0).getName() +
                     "</b> на лаву запасних\n" +
                     transfer.getNewsLink();
         } else {
-            StringBuilder s = new StringBuilder(transfer.getOldTeam() + " перевели ");
+            StringBuilder s = new StringBuilder("<b>" + transfer.getOldTeam() + "</b> перевели ");
             for (int w = 1; w < transfer.getPlayers().size() - 1; w++) {
                 s.append(", ")
                         .append(transfer.getPlayers().get(w).getFlag())
@@ -592,11 +592,11 @@ public class SendMessageService {
         return transfer.getPlayers().get(0).getFlag() +
                 "<b>" +
                 transfer.getPlayers().get(0).getName() +
-                "</b> перейшов з " +
+                "</b> перейшов з <b>" +
                 transfer.getOldTeam() +
-                " до " +
+                "</b> до <b>" +
                 transfer.getNewTeam() +
-                "\n" +
+                "</b>\n" +
                 transfer.getNewsLink();
     }
 
