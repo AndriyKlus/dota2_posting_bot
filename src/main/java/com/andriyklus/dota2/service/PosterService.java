@@ -3,10 +3,7 @@ package com.andriyklus.dota2.service;
 import com.andriyklus.dota2.domain.*;
 import com.andriyklus.dota2.parcer.GameInsideParser;
 import com.andriyklus.dota2.parcer.LiquipediaParser;
-import com.andriyklus.dota2.service.db.GameinsideNewsPostService;
-import com.andriyklus.dota2.service.db.MatchService;
-import com.andriyklus.dota2.service.db.TransferService;
-import com.andriyklus.dota2.service.db.UkrainianTeamService;
+import com.andriyklus.dota2.service.db.*;
 import com.andriyklus.dota2.telegram.service.SendMessageService;
 import com.andriyklus.dota2.util.RussianFilter;
 import lombok.RequiredArgsConstructor;
@@ -124,6 +121,15 @@ public class PosterService {
         DayInDota dayInDota = liquipediaParser.parseDayInDota();
         if (dayInDota.getPlayersBirths().size() > 0 || dayInDota.getTournamentWinners().size() > 0)
             sendMessageService.sendThisDayInDotaMessage(dayInDota);
+    }
+
+    @Scheduled(cron = "0 0 6 * * *")
+    private void postDayQuest() {
+        Optional<Quest> quest = questService.getQuest();
+        if(quest.isPresent()) {
+            sendMessageService.postDayQuest(quest.get());
+            questService.deleteQuestById(quest.get().getId());
+        }
     }
 
     private List<GameinsideNewsPost> getNewPosts(List<GameinsideNewsPost> news) {

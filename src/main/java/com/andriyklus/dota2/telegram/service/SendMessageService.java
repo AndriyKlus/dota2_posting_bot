@@ -6,6 +6,7 @@ import com.andriyklus.dota2.service.db.UkrainianTeamService;
 import com.andriyklus.dota2.telegram.messagesender.MessageSender;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.polls.SendPoll;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
@@ -695,4 +696,17 @@ public class SendMessageService {
         return String.valueOf(age.getYear());
     }
 
+    public void postDayQuest(Quest quest) {
+        var message = SendPoll.builder()
+                .chatId(CHAT_ID)
+                .allowMultipleAnswers(false)
+                .question(quest.getQuestion())
+                .options(quest.getChoices())
+                .type("quiz")
+                .correctOptionId(quest.getChoices().indexOf(quest.getRightAnswer()))
+                .explanation(quest.getFeedback())
+                .build();
+
+        messageSender.sendPoll(message);
+    }
 }
