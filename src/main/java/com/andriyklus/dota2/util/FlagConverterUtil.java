@@ -83,6 +83,7 @@ public class FlagConverterUtil {
         countryFlag.put("Singapore", "\uD83C\uDDF8\uD83C\uDDEC");
         countryFlag.put("Thailand", "\uD83C\uDDF9\uD83C\uDDED");
         countryFlag.put("Vietnam", "\uD83C\uDDFB\uD83C\uDDF3");
+        countryFlag.put("Nicaragua", "\uD83C\uDDF3\uD83C\uDDEE");
     }
 
     public static String getFlag(String country) {

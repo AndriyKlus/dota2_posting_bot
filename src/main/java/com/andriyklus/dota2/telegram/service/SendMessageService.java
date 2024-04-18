@@ -674,7 +674,8 @@ public class SendMessageService {
             stringBuilder.append("\n\uD83C\uDF88<b> Сьогодні день народження ")
                     .append(dayInDota.getPlayersBirths().size() > 1 ? "святкують:</b>\n" : "святкує:</b>\n");
             for (Player player : dayInDota.getPlayersBirths()) {
-                stringBuilder.append("\uD83D\uDD38 <a href=\"")
+                stringBuilder.append(player.getFlag())
+                        .append(" <a href=\"")
                         .append(player.getLink())
                         .append("\">")
                         .append(player.getName())
