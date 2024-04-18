@@ -360,12 +360,16 @@ public class LiquipediaParser {
 
         List<Player> players = parseTransferPlayers(element.getElementsByClass("Name").get(0));
         String oldTeam = parseOldTeam(element.getElementsByClass("OldTeam").get(0));
+        String oldTeamLink = parseOldTeamLink(element.getElementsByClass("OldTeam").get(0));
         String newTeam = parseNewTeam(element.getElementsByClass("NewTeam").get(0));
+        String newTeamLink = parseNewsTeamLink(element.getElementsByClass("NewTeam").get(0));
         String position = parseNewTeamPosition(element.getElementsByClass("NewTeam").get(0));
         return Optional.of(Transfer.builder()
                 .players(players)
                 .oldTeam(oldTeam)
+                .oldTeamLink(oldTeamLink)
                 .newTeam(newTeam)
+                .newTeamLink(newTeamLink)
                 .newTeamPosition(position)
                 .newsLink(newsLink)
                 .build());
@@ -412,6 +416,30 @@ public class LiquipediaParser {
         return element.getElementsByClass("team-template-team-icon")
                 .get(0)
                 .attr("data-highlightingclass");
+    }
+
+    private String parseOldTeamLink(Element element) {
+        try {
+            return LIQUIPEDIA_URL + element.getElementsByClass("team-template-team-icon")
+                    .get(0)
+                    .getElementsByTag("a")
+                    .get(0)
+                    .attr("href");
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    private String parseNewsTeamLink(Element element) {
+        try {
+            return LIQUIPEDIA_URL +element.getElementsByClass("team-template-team-icon")
+                    .get(0)
+                    .getElementsByTag("a")
+                    .get(0)
+                    .attr("href");
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
     private String parseNewTeam(Element element) {
@@ -479,7 +507,7 @@ public class LiquipediaParser {
 
     private void parseTournamentWinner(Element element, String year, Map<Tournament, Team> tournamentWinners) {
         String tournamentName = element.getElementsByTag("a").get(0).text();
-        if(Strings.isEmpty(tournamentName))
+        if (Strings.isEmpty(tournamentName))
             tournamentName = element.getElementsByTag("a").get(1).text();
         String tournamentLink = LIQUIPEDIA_URL + element.getElementsByTag("a").get(1).attr("href");
         String teamName = element.getElementsByClass("team-template-text").get(0)

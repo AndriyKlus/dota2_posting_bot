@@ -20,7 +20,9 @@ public class Transfer {
     private String id;
     private List<Player> players;
     private String oldTeam;
+    private String oldTeamLink;
     private String newTeam;
+    private String newTeamLink;
     private String newTeamPosition;
     private String newsLink;
 

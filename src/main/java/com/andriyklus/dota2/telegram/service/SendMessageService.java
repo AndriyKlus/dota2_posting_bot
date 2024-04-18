@@ -400,6 +400,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatMessageTransferNoneToTeam(transfer))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -410,6 +411,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatMessageTransferNoneToTeamCoach(transfer))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -420,6 +422,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatMessageTransferFromTeamToNone(transfer))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -430,6 +433,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatMessageTransferRetiredToTeam(transfer))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -440,6 +444,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatMessageTransferRetiredToTeamCoach(transfer))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -450,6 +455,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatMessageFromTeamToInactive(transfer))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -460,6 +466,7 @@ public class SendMessageService {
                 .chatId(CHAT_ID)
                 .text(formatMessageServiceFromTeamToTeam(transfer))
                 .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
                 .build();
 
         messageSender.sendMessage(message);
@@ -470,10 +477,13 @@ public class SendMessageService {
             return transfer.getPlayers().get(0).getFlag() +
                     "<b>" +
                     transfer.getPlayers().get(0).getName() +
-                    "</b> приєднався до <b>" +
+                    "</b> приєднався до <b><a href=\"" +
+                    transfer.getNewTeamLink() +
+                    "\">" +
                     transfer.getNewTeam() +
-                    "</b>\n" +
-                    transfer.getNewsLink();
+                    "</a></b>\n<a href=\"" +
+                    transfer.getNewsLink() +
+                    "\">Переглянути анонс</a>";
         } else {
             StringBuilder s = new StringBuilder(transfer.getPlayers().get(0).getFlag() +
                     "<b>" + transfer.getPlayers().get(0).getName() + "</b>");
@@ -489,10 +499,13 @@ public class SendMessageService {
                     .append("<b>")
                     .append(transfer.getPlayers().get(transfer.getPlayers().size() - 1).getName())
                     .append("</b>");
-            s.append(" приєднались до <b>")
+            s.append(" приєднались до <b><a href=\"")
+                    .append(transfer.getNewTeamLink())
+                    .append("\">")
                     .append(transfer.getNewTeam())
-                    .append("</b>\n")
-                    .append(transfer.getNewsLink());
+                    .append("</a></b>\n<a href=\"")
+                    .append(transfer.getNewsLink())
+                    .append("\">Переглянути анонс</a>");
             return s.toString();
         }
     }
@@ -501,10 +514,13 @@ public class SendMessageService {
         return transfer.getPlayers().get(0).getFlag() +
                 "<b>" +
                 transfer.getPlayers().get(0).getName() +
-                "</b> приєднався до <b>" +
+                "</b> приєднався до <b><a href=\"" +
+                transfer.getNewTeamLink() +
+                "\">" +
                 transfer.getNewTeam() +
-                "</b> на позицію тренера\n" +
-                transfer.getNewsLink();
+                "</a></b> на позицію тренера\n<a href=\"" +
+                transfer.getNewsLink() +
+                "\">Переглянути анонс</a>";
     }
 
     private String formatMessageTransferFromTeamToNone(Transfer transfer) {
@@ -512,10 +528,13 @@ public class SendMessageService {
             return transfer.getPlayers().get(0).getFlag() +
                     "<b>" +
                     transfer.getPlayers().get(0).getName() +
-                    "</b> покинув склад <b>" +
+                    "</b> покинув склад <b><a href=\"" +
+                    transfer.getOldTeamLink() +
+                    "\">" +
                     transfer.getOldTeam() +
-                    "</b>\n" +
-                    transfer.getNewsLink();
+                    "</a></b>\n<a href=\"" +
+                    transfer.getNewsLink() +
+                    "\">Переглянути анонс</a>";
         } else {
             StringBuilder s = new StringBuilder(transfer.getPlayers().get(0).getFlag() +
                     "<b>" + transfer.getPlayers().get(0).getName() + "</b>");
@@ -531,10 +550,13 @@ public class SendMessageService {
                     .append("<b>")
                     .append(transfer.getPlayers().get(transfer.getPlayers().size() - 1).getName())
                     .append("</b>");
-            s.append(" покинули склад <b>")
+            s.append(" покинули склад <b><a href=\"")
+                    .append(transfer.getOldTeamLink())
+                    .append("\">")
                     .append(transfer.getOldTeam())
-                    .append("</b>\n")
-                    .append(transfer.getNewsLink());
+                    .append("</a></b>\n<a href=\"")
+                    .append(transfer.getNewsLink())
+                    .append("\">Переглянути анонс</a>");
             return s.toString();
         }
     }
@@ -543,33 +565,47 @@ public class SendMessageService {
         return transfer.getPlayers().get(0).getFlag() +
                 "<b>" +
                 transfer.getPlayers().get(0).getName() +
-                "</b> повернувся на професійну сцену та приєднався до <b>" +
+                "</b> повернувся на професійну сцену та приєднався до <b><a href=\"" +
+                transfer.getNewTeamLink() +
+                "\">" +
                 transfer.getNewTeam() +
-                "</b>\n" +
-                transfer.getNewsLink();
+                "</a></b>\n<a href=\"" +
+                transfer.getNewsLink() +
+                "\">Переглянути анонс</a>";
     }
 
     private String formatMessageTransferRetiredToTeamCoach(Transfer transfer) {
         return transfer.getPlayers().get(0).getFlag() +
                 "<b>" +
                 transfer.getPlayers().get(0).getName() +
-                "</b> повернувся на професійну сцену та приєднався до <b>" +
+                "</b> повернувся на професійну сцену та приєднався до <b><a href=\"" +
+                transfer.getNewTeamLink() +
+                "\">" +
                 transfer.getNewTeam() +
-                "</b> на позицію тренера\n" +
-                transfer.getNewsLink();
+                "</a></b> на позицію тренера\n<a href=\"" +
+                transfer.getNewsLink() +
+                "\">Переглянути анонс</a>";
     }
 
     private String formatMessageFromTeamToInactive(Transfer transfer) {
         if (transfer.getPlayers().size() == 1) {
-            return "<b>" + transfer.getOldTeam() +
-                    "</b> перевели " +
+            return "<b><a href=\"" +
+                    transfer.getOldTeamLink() +
+                    "\">" +
+                    transfer.getOldTeam() +
+                    "</a></b> перевели " +
                     transfer.getPlayers().get(0).getFlag() +
                     "<b>" +
                     transfer.getPlayers().get(0).getName() +
-                    "</b> на лаву запасних\n" +
-                    transfer.getNewsLink();
+                    "</b> на лаву запасних\n<a href=\"" +
+                    transfer.getNewsLink() +
+                    "\">Переглянути анонс</a>";
         } else {
-            StringBuilder s = new StringBuilder("<b>" + transfer.getOldTeam() + "</b> перевели ");
+            StringBuilder s = new StringBuilder("<b><a href=\"" +
+                    transfer.getOldTeamLink() +
+                    "\">" +
+                    transfer.getOldTeam() +
+                    "</a></b> перевели ");
             for (int w = 1; w < transfer.getPlayers().size() - 1; w++) {
                 s.append(", ")
                         .append(transfer.getPlayers().get(w).getFlag())
@@ -582,8 +618,9 @@ public class SendMessageService {
                     .append("<b>")
                     .append(transfer.getPlayers().get(transfer.getPlayers().size() - 1).getName())
                     .append("</b>");
-            s.append(" на лаву запасних\n ")
-                    .append(transfer.getNewsLink());
+            s.append(" на лаву запасних\n<a href=\"")
+                    .append(transfer.getNewsLink())
+                    .append("\">Переглянути анонс</a>");
             return s.toString();
         }
     }
@@ -592,12 +629,17 @@ public class SendMessageService {
         return transfer.getPlayers().get(0).getFlag() +
                 "<b>" +
                 transfer.getPlayers().get(0).getName() +
-                "</b> перейшов з <b>" +
+                "</b> перейшов з <b><a href=\"" +
+                transfer.getOldTeamLink() +
+                "\">" +
                 transfer.getOldTeam() +
-                "</b> до <b>" +
+                "</a></b> до <b><a href=\"" +
+                transfer.getNewTeamLink() +
+                "\">" +
                 transfer.getNewTeam() +
-                "</b>\n" +
-                transfer.getNewsLink();
+                "</a></b>\n<a href=\"" +
+                transfer.getNewsLink() +
+                "\">Переглянути анонс</a>";
     }
 
     public void sendThisDayInDotaMessage(DayInDota dayInDota) {
