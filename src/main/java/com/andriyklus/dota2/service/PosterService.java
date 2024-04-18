@@ -31,6 +31,7 @@ public class PosterService {
     private final GameInsideParser gameInsideParser;
     private final RussianFilter russianFilter;
     private final TransferService transferService;
+    private final QuestService questService;
 
     Logger logger = LoggerFactory.getLogger(PosterService.class);
 
