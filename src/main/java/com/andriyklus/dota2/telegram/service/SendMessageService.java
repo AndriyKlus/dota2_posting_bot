@@ -380,6 +380,23 @@ public class SendMessageService {
     }
 
     private String formatMatchResult(Match match) {
+        if(match.getTeamOne().getScore() == 10 || match.getTeamOne().getScore() == -10)
+            return matchResultEmoji(match) +
+                    " " +
+                    "<b>" +
+                    match.getTeamOne().getName() +
+                    " " +
+                    (match.getTeamOne().getScore() == -10 ? "FF" : "W") +
+                    " - " +
+                    (match.getTeamTwo().getScore() == -10 ? "FF" : "W") +
+                    " " +
+                    match.getTeamTwo().getName() +
+                    "</b> " +
+                    "на <a href=\"" +
+                    match.getTournament().getLink() +
+                    "\">" +
+                    match.getTournament().getName() +
+                    "</a>";
         return matchResultEmoji(match) +
                 " " +
                 "<b>" +
