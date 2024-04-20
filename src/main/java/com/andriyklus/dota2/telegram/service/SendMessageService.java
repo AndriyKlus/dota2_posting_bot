@@ -134,7 +134,7 @@ public class SendMessageService {
                 .append("\">")
                 .append(match.getTournament().getName())
                 .append("</a></b>\n");
-        if (Objects.nonNull(match.getTeamOne().getPlayers()) && Objects.nonNull(match.getTeamTwo().getPlayers())) {
+        /*if (Objects.nonNull(match.getTeamOne().getPlayers()) && Objects.nonNull(match.getTeamTwo().getPlayers())) {
             stringBuilder.append("\uD83D\uDC65 Склади команд\n<b>")
                     .append(match.getTeamOne().getName())
                     .append("</b>: ")
@@ -143,7 +143,7 @@ public class SendMessageService {
                     .append(match.getTeamTwo().getName())
                     .append("</b>: ")
                     .append(String.join(", ", match.getTeamTwo().getPlayers()));
-        }
+        }*/
         return stringBuilder.toString();
     }
 
@@ -275,6 +275,17 @@ public class SendMessageService {
     }
 
     private String formatMessageUkrTeamWonMatch(Match match, Team team) {
+        if (match.getTeamOne().getScore() == 10 || match.getTeamOne().getScore() == -10)
+            return "\uD83D\uDFE2 <b>" +
+                    team.getName() +
+                    "</b>" +
+                    " перемогли технічною перемогою <b>" +
+                    (match.getTeamOne().getName().equals(team.getName()) ? match.getTeamTwo().getName() : match.getTeamOne().getName()) +
+                    "</b> на <a href=\"" +
+                    match.getTournament().getLink() +
+                    "\">" +
+                    match.getTournament().getName() +
+                    "</a>";
         return "\uD83D\uDFE2 <b>" +
                 team.getName() +
                 "</b>" +
@@ -296,6 +307,17 @@ public class SendMessageService {
     }
 
     private String formatMessageUkrTeamLostMatch(Match match, Team team) {
+        if (match.getTeamOne().getScore() == 10 || match.getTeamOne().getScore() == -10)
+            return "\uD83D\uDD34 <b>" +
+                (match.getTeamOne().getName().equals(team.getName()) ? match.getTeamTwo().getName() : match.getTeamOne().getName()) +
+                "</b>" +
+                " зазнали технічної поразки від <b>" +
+                team.getName() +
+                "</b> на <a href=\"" +
+                match.getTournament().getLink() +
+                "\">" +
+                match.getTournament().getName() +
+                "</a>";
         return "\uD83D\uDD34 <b>" +
                 (match.getTeamOne().getName().equals(team.getName()) ? match.getTeamTwo().getName() : match.getTeamOne().getName()) +
                 "</b>" +
@@ -671,7 +693,7 @@ public class SendMessageService {
                     .append("</a></b>\n"));
         }
 
-        if(dayInDota.getPlayersBirths().size() > 0) {
+        if (dayInDota.getPlayersBirths().size() > 0) {
             stringBuilder.append("\n\uD83C\uDF88<b> Сьогодні день народження ")
                     .append(dayInDota.getPlayersBirths().size() > 1 ? "святкують:</b>\n" : "святкує:</b>\n");
             for (Player player : dayInDota.getPlayersBirths()) {

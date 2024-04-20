@@ -300,8 +300,14 @@ public class LiquipediaParser {
             secondTeamScore = Integer.parseInt(endedMatchBox.getElementsByClass("versus").get(0)
                     .getElementsByTag("div").get(0).text().substring(2, 3));
         } catch (NumberFormatException e) {
-            //logger.error("One of the team forfeited");
-            return null;
+            if (endedMatchBox.getElementsByClass("versus").get(0)
+                    .getElementsByTag("div").get(0).text().charAt(0) == 'W') {
+                firstTeamScore = 10;
+                secondTeamScore = -10;
+            } else {
+                secondTeamScore = 10;
+                firstTeamScore = -10;
+            }
         }
         Tournament tournament = parseTournament(endedMatchBox);
         String time;
