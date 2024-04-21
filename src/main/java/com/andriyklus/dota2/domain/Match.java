@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import java.util.List;
 
 @Data
 @Document
@@ -21,4 +22,5 @@ public class Match {
     private Tournament tournament;
     private String time;
     private int format;
+    private List<TwitchChannel> streams;
 }

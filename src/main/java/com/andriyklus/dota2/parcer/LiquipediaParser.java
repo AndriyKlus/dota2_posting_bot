@@ -37,6 +37,7 @@ public class LiquipediaParser {
     private final UkrainianTeamService teamService;
     private final TransferService transferService;
     private final RussianFilter russianFilter;
+    private final TwitchParser twitchParser;
 
     private final Logger logger = LoggerFactory.getLogger(LiquipediaParser.class);
 
@@ -193,8 +194,9 @@ public class LiquipediaParser {
                 .getElementsByTag("div").get(0)
                 .getElementsByTag("div").get(0).text().substring(2, 3));
 
-        if (filterUkrainianTeams(firstTeamName, secondTeamName))
+        if (filterUkrainianTeams(firstTeamName, secondTeamName)) {
             return Optional.empty();
+        }
 
         Tournament tournament = parseTournament(matchBox);
 
@@ -209,7 +211,9 @@ public class LiquipediaParser {
                         .build())
                 .tournament(tournament)
                 .format(matchFormat)
+                .streams(streamChannels)
                 .build();
+
         try {
             String twitchChannel = matchBox.getElementsByClass("timer-object-countdown-only").get(0)
                     .attr("data-stream-twitch");
@@ -217,6 +221,7 @@ public class LiquipediaParser {
         } catch (Exception e) {
             logger.error("Cannot parse players of teams");
         }
+
         return Optional.of(match);
     }
 
