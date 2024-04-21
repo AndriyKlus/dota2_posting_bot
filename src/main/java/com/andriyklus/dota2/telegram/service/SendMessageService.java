@@ -134,6 +134,36 @@ public class SendMessageService {
                 .append("\">")
                 .append(match.getTournament().getName())
                 .append("</a></b>\n");
+
+        if (match.getStreams().stream().anyMatch(TwitchChannel::isOfficial)) {
+            TwitchChannel twitchChannel = match.getStreams().stream().filter(TwitchChannel::isOfficial).findAny().get();
+            stringBuilder.append("\uD83C\uDFA5 Офіційна трансляція: ")
+                    .append("<b><a href=\"")
+                    .append(twitchChannel.getUrl())
+                    .append("\">")
+                    .append(twitchChannel.getName())
+                    .append("</a></b>\n");
+        }
+
+        if (match.getStreams().stream().anyMatch(TwitchChannel::isOfficial)) {
+            List<TwitchChannel> twitchChannels = match.getStreams().stream()
+                    .filter(twitchChannel -> !twitchChannel.isOfficial())
+                    .toList();
+            if (twitchChannels.size() > 1)
+                stringBuilder.append("\uD83D\uDCF7 Комюніті трансляція: ");
+            else
+                stringBuilder.append("\uD83D\uDCF7 Комюніті трансляції" +
+                        ": ");
+            for (TwitchChannel twitchChannel : twitchChannels) {
+                stringBuilder.append("<b><a href=\"")
+                        .append(twitchChannel.getUrl())
+                        .append("\">")
+                        .append(twitchChannel.getName())
+                        .append("</a></b>, ");
+            }
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        }
+
         /*if (Objects.nonNull(match.getTeamOne().getPlayers()) && Objects.nonNull(match.getTeamTwo().getPlayers())) {
             stringBuilder.append("\uD83D\uDC65 Склади команд\n<b>")
                     .append(match.getTeamOne().getName())

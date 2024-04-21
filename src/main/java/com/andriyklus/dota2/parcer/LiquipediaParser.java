@@ -181,6 +181,8 @@ public class LiquipediaParser {
             return Optional.empty();
         }
 
+        List<TwitchChannel> streamChannels = twitchParser.parseStreamChannels(firstTeamName, secondTeamName);
+
         int matchFormat;
         try {
             matchFormat = Integer.parseInt(matchBox.getElementsByClass("versus-lower").get(0).text().substring(3, 4));
